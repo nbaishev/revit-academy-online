@@ -158,6 +158,16 @@ export function Header() {
                     <LayoutDashboard className="h-4 w-4" />
                     Мои курсы
                   </Link>
+                  {user.role === 'moderator' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted"
+                    >
+                      <User className="h-4 w-4" />
+                      Панель модератора
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       logout();
