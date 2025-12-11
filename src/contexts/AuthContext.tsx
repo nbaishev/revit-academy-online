@@ -22,13 +22,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for demo purposes
+// Mock user for demo purposes (set to moderator to test admin panel)
 const mockUser: User = {
   id: '1',
   name: 'Иван Иванов',
   email: 'ivan@example.com',
   avatar: undefined,
-  role: 'user',
+  role: 'moderator',
   purchasedCourses: ['revit-basics', 'revit-architecture'],
   progress: {
     'revit-basics': {
