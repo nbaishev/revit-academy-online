@@ -1,20 +1,10 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCourseById } from '@/data/courses';
-import {
-  Clock,
-  Users,
-  Star,
-  BookOpen,
-  CheckCircle2,
-  Play,
-  Lock,
-  ArrowLeft,
-  Target,
-  Award,
-} from 'lucide-react';
+import { Clock, CheckCircle2, Play, Lock, ArrowLeft, Award, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -23,32 +13,71 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
-import { useState } from 'react';
+import { api } from '@/lib/api';
+import { ApiCourse } from '@/lib/types';
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const { user, login, hasAccessToCourse, markLessonComplete, getCourseProgress } = useAuth();
+  const {
+    user,
+    login,
+    hasAccessToCourse,
+    markLessonComplete,
+    getCourseProgress,
+    registerCourseLessonCount,
+    progress,
+    refreshMyCourses,
+  } = useAuth();
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
 
-  const course = courseId ? getCourseById(courseId) : undefined;
+  const { data: course, isLoading, isError } = useQuery<ApiCourse | null>({
+    queryKey: ['course', courseId],
+    queryFn: () => (courseId ? api.getCourse(courseId) : Promise.resolve(null)),
+    enabled: Boolean(courseId),
+  });
 
-  if (!course) {
+  const { data: content } = useQuery<ApiCourse | null>({
+    queryKey: ['course-content', courseId, user?.id],
+    queryFn: () => (courseId ? api.getCourseContent(courseId) : Promise.resolve(null)),
+    enabled: Boolean(
+      courseId &&
+        course &&
+        (course.is_free || (user && hasAccessToCourse({ id: course.id, is_free: course.is_free })))
+    ),
+  });
+
+  useEffect(() => {
+    if (content) {
+      const lessonsTotal =
+        content.modules?.reduce((acc, module) => acc + (module.lessons?.length || 0), 0) ?? 0;
+      registerCourseLessonCount(content.id, lessonsTotal);
+    }
+  }, [content, registerCourseLessonCount]);
+
+  const selectedLessonData = selectedLesson
+    ? content?.modules?.flatMap((m) => m.lessons).find((l) => l.id === selectedLesson)
+    : null;
+
+  if (!courseId || isError) {
     return <Navigate to="/courses" replace />;
   }
 
-  const hasAccess = hasAccessToCourse(course.id);
-  const isFree = course.price === null;
-  const progress = getCourseProgress(course.id);
+  if (isLoading || !course) {
+    return (
+      <Layout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      </Layout>
+    );
+  }
 
-  // Find selected lesson data
-  const selectedLessonData = selectedLesson
-    ? course.modules
-        .flatMap((m) => m.lessons)
-        .find((l) => l.id === selectedLesson)
-    : null;
+  const hasAccess = hasAccessToCourse({ id: course.id, is_free: course.is_free });
+  const isFree = course.is_free || course.price === null;
+  const courseProgress = getCourseProgress(course.id);
 
   // User with access - show learning interface
-  if (user && hasAccess) {
+  if (user && hasAccess && content) {
     return (
       <Layout showFooter={false}>
         <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
@@ -114,13 +143,13 @@ const CourseDetail = () => {
                   <span className="text-muted-foreground">Прогресс</span>
                   <span className="font-medium">{Math.round(progress)}%</span>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <Progress value={courseProgress} className="h-2" />
               </div>
             </div>
 
             <div className="h-[calc(100%-140px)] overflow-auto">
-              <Accordion type="multiple" className="w-full" defaultValue={course.modules.map(m => m.id)}>
-                {course.modules.map((module) => (
+              <Accordion type="multiple" className="w-full" defaultValue={content.modules?.map(m => m.id)}>
+                {content.modules?.map((module) => (
                   <AccordionItem key={module.id} value={module.id}>
                     <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:no-underline">
                       {module.title}
@@ -128,7 +157,9 @@ const CourseDetail = () => {
                     <AccordionContent className="pb-0">
                       <ul>
                         {module.lessons.map((lesson) => {
-                          const isCompleted = user?.progress[course.id]?.completedLessons.includes(lesson.id);
+                          const isCompleted = progress.some(
+                            (p) => p.course_id === course.id && p.lesson.id === lesson.id && p.is_completed
+                          );
                           return (
                             <li key={lesson.id}>
                               <button
@@ -139,22 +170,14 @@ const CourseDetail = () => {
                               >
                                 <div
                                   className={`flex h-6 w-6 items-center justify-center rounded-full ${
-                                    isCompleted
-                                      ? 'bg-green-500 text-white'
-                                      : 'border border-border'
+                                    isCompleted ? 'bg-green-500 text-white' : 'border border-border'
                                   }`}
                                 >
-                                  {isCompleted ? (
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  ) : (
-                                    <Play className="h-3 w-3" />
-                                  )}
+                                  {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Play className="h-3 w-3" />}
                                 </div>
                                 <div className="flex-1">
                                   <div className="line-clamp-1">{lesson.title}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {lesson.duration}
-                                  </div>
+                                  <div className="text-xs text-muted-foreground">{lesson.duration}</div>
                                 </div>
                               </button>
                             </li>
@@ -201,31 +224,14 @@ const CourseDetail = () => {
               <h1 className="mb-4 text-3xl font-bold md:text-4xl">{course.title}</h1>
               <p className="mb-6 text-lg text-muted-foreground">{course.description}</p>
 
-              {/* Stats */}
               <div className="mb-6 flex flex-wrap items-center gap-6 text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 fill-accent text-accent" />
-                  <span className="font-medium text-foreground">{course.rating}</span>
-                  <span>({course.studentsCount} студентов)</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5" />
-                  <span>{course.duration}</span>
+                  <span>{course.lessons_count ?? 0} уроков</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  <span>{course.lessonsCount} уроков</span>
-                </div>
-              </div>
-
-              {/* Instructor */}
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-medium text-primary">
-                  {course.instructor.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Преподаватель</div>
-                  <div className="font-medium">{course.instructor}</div>
+                  <Layers className="h-5 w-5" />
+                  <span>{course.modules_count ?? 0} модулей</span>
                 </div>
               </div>
             </div>
@@ -250,17 +256,29 @@ const CourseDetail = () => {
                 </div>
 
                 {user ? (
-                  isFree ? (
+                  hasAccess ? (
+                    <Button variant="hero" size="lg" className="w-full">
+                      Продолжить
+                    </Button>
+                  ) : isFree ? (
                     <Button variant="hero" size="lg" className="w-full">
                       Начать обучение
                     </Button>
                   ) : (
-                    <Button variant="hero" size="lg" className="w-full">
+                    <Button
+                      variant="hero"
+                      size="lg"
+                      className="w-full"
+                      onClick={async () => {
+                        await api.purchaseCourse(course.id);
+                        await refreshMyCourses();
+                      }}
+                    >
                       Купить курс
                     </Button>
                   )
                 ) : (
-                  <Button onClick={login} variant="hero" size="lg" className="w-full">
+                  <Button onClick={() => login()} variant="hero" size="lg" className="w-full">
                     Войти, чтобы начать
                   </Button>
                 )}
@@ -268,7 +286,7 @@ const CourseDetail = () => {
                 <ul className="mt-6 space-y-3 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>{course.lessonsCount} видеоуроков</span>
+                    <span>{course.lessons_count ?? 0} видеоуроков</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -286,48 +304,6 @@ const CourseDetail = () => {
       </section>
 
       {/* Outcomes */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-8 lg:grid-cols-2">
-            {/* What you'll learn */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Target className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold">Чему вы научитесь</h2>
-              </div>
-              <ul className="grid gap-3 md:grid-cols-2">
-                {course.outcomes.map((outcome, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
-                    <span>{outcome}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Target Audience */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold">Для кого этот курс</h2>
-              </div>
-              <ul className="space-y-3">
-                {course.targetAudience.map((audience, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <span>{audience}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Program */}
       <section className="bg-muted/30 py-12">
         <div className="container mx-auto px-4">
@@ -339,7 +315,7 @@ const CourseDetail = () => {
           </div>
 
           <Accordion type="multiple" className="space-y-4">
-            {course.modules.map((module, moduleIndex) => (
+            {course.modules?.map((module, moduleIndex) => (
               <AccordionItem
                 key={module.id}
                 value={module.id}
@@ -361,10 +337,7 @@ const CourseDetail = () => {
                 <AccordionContent className="border-t border-border px-6 pb-4 pt-0">
                   <ul className="divide-y divide-border">
                     {module.lessons.map((lesson, lessonIndex) => (
-                      <li
-                        key={lesson.id}
-                        className="flex items-center justify-between py-3"
-                      >
+                      <li key={lesson.id} className="flex items-center justify-between py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
                             {lessonIndex + 1}

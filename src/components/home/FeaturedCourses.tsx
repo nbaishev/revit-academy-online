@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { CourseCard } from '@/components/courses/CourseCard';
-import { getFeaturedCourses } from '@/data/courses';
 import { ArrowRight } from 'lucide-react';
+import { api } from '@/lib/api';
+import { ApiCourse } from '@/lib/types';
 
 export function FeaturedCourses() {
-  const featuredCourses = getFeaturedCourses();
+  const { data: featuredCourses, isLoading } = useQuery<ApiCourse[]>({
+    queryKey: ['courses', 'featured'],
+    queryFn: () => api.listCourses({ is_featured: true }),
+  });
 
   return (
     <section className="bg-muted/30 py-20">
@@ -27,11 +32,15 @@ export function FeaturedCourses() {
           </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {featuredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </div>
+        {isLoading && <p className="text-muted-foreground">Загрузка популярных курсов...</p>}
+
+        {featuredCourses && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {featuredCourses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

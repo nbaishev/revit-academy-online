@@ -1,116 +1,132 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: 'user' | 'moderator';
-  purchasedCourses: string[];
-  progress: Record<string, { completedLessons: string[]; lastAccessed: Date }>;
-}
+import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { api } from '@/lib/api';
+import { ApiCourse, ProgressEntry, User } from '@/lib/types';
+import { getGoogleIdToken } from '@/lib/googleIdentity';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: () => void;
+  myCourses: ApiCourse[];
+  progress: ProgressEntry[];
+  login: (idToken?: string) => Promise<void>;
   logout: () => void;
-  hasAccessToCourse: (courseId: string) => boolean;
-  markLessonComplete: (courseId: string, lessonId: string) => void;
+  hasAccessToCourse: (course: Pick<ApiCourse, 'id' | 'is_free'>) => boolean;
+  markLessonComplete: (courseId: string, lessonId: string) => Promise<void>;
   getCourseProgress: (courseId: string) => number;
+  registerCourseLessonCount: (courseId: string, totalLessons: number) => void;
+  refreshMyCourses: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for demo purposes (set to moderator to test admin panel)
-const mockUser: User = {
-  id: '1',
-  name: 'Иван Иванов',
-  email: 'ivan@example.com',
-  avatar: undefined,
-  role: 'moderator',
-  purchasedCourses: ['revit-basics', 'revit-architecture'],
-  progress: {
-    'revit-basics': {
-      completedLessons: ['lesson-1-1', 'lesson-1-2'],
-      lastAccessed: new Date(),
-    },
-  },
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [myCourses, setMyCourses] = useState<ApiCourse[]>([]);
+  const [progress, setProgress] = useState<ProgressEntry[]>([]);
+  const [lessonTotals, setLessonTotals] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for saved session
-    const savedUser = localStorage.getItem('revit-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+  const loadProfile = async () => {
+    try {
+      const me = await api.getMe();
+      setUser(me);
+      const courses = await api.getMyCourses();
+      setMyCourses(courses);
+      const prog = await api.getProgress();
+      setProgress(prog);
+    } catch (e) {
+      // If tokens are invalid, clear auth but do not crash.
+      api.clearAuth();
+      setUser(null);
+      setMyCourses([]);
+      setProgress([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const stored = api.loadTokens();
+    if (stored) {
+      loadProfile();
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
-  const login = () => {
-    // Mock Google OAuth login
-    setUser(mockUser);
-    localStorage.setItem('revit-user', JSON.stringify(mockUser));
+  const refreshMyCourses = async () => {
+    const courses = await api.getMyCourses();
+    setMyCourses(courses);
+  };
+
+  const login = async (idToken?: string) => {
+    setIsLoading(true);
+    try {
+      const token =
+        idToken ||
+        (await getGoogleIdToken(import.meta.env.VITE_GOOGLE_CLIENT_ID || ''));
+      const data = await api.loginWithGoogle(token);
+      setUser(data.user);
+      await refreshMyCourses();
+      const prog = await api.getProgress();
+      setProgress(prog);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
+    api.clearAuth();
     setUser(null);
-    localStorage.removeItem('revit-user');
+    setMyCourses([]);
+    setProgress([]);
   };
 
-  const hasAccessToCourse = (courseId: string): boolean => {
-    if (!user) return false;
-    // Free courses (revit-basics) are accessible to all logged-in users
-    if (courseId === 'revit-basics') return true;
-    return user.purchasedCourses.includes(courseId);
+  const hasAccessToCourse = (course: Pick<ApiCourse, 'id' | 'is_free'>) => {
+    if (course.is_free) return true;
+    return myCourses.some((c) => c.id === course.id);
   };
 
-  const markLessonComplete = (courseId: string, lessonId: string) => {
-    if (!user) return;
-
-    const updatedProgress = { ...user.progress };
-    if (!updatedProgress[courseId]) {
-      updatedProgress[courseId] = { completedLessons: [], lastAccessed: new Date() };
-    }
-    
-    if (!updatedProgress[courseId].completedLessons.includes(lessonId)) {
-      updatedProgress[courseId].completedLessons.push(lessonId);
-    }
-    updatedProgress[courseId].lastAccessed = new Date();
-
-    const updatedUser = { ...user, progress: updatedProgress };
-    setUser(updatedUser);
-    localStorage.setItem('revit-user', JSON.stringify(updatedUser));
+  const markLessonComplete = async (courseId: string, lessonId: string) => {
+    const entry = await api.completeLesson(courseId, lessonId);
+    setProgress((prev) => {
+      const existing = prev.find((p) => p.id === entry.id);
+      if (existing) {
+        return prev.map((p) => (p.id === entry.id ? entry : p));
+      }
+      return [...prev, entry];
+    });
   };
 
-  const getCourseProgress = (courseId: string): number => {
-    if (!user || !user.progress[courseId]) return 0;
-    
-    // This would need course data to calculate properly
-    const completedCount = user.progress[courseId].completedLessons.length;
-    // Mock total for demo
-    return Math.min(100, (completedCount / 10) * 100);
+  const registerCourseLessonCount = (courseId: string, totalLessons: number) => {
+    setLessonTotals((prev) => ({ ...prev, [courseId]: totalLessons }));
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        logout,
-        hasAccessToCourse,
-        markLessonComplete,
-        getCourseProgress,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const getCourseProgress = (courseId: string) => {
+    const total = lessonTotals[courseId];
+    if (!total || total === 0) return 0;
+    const completed = progress.filter((p) => p.course_id === courseId && p.is_completed).length;
+    return Math.min(100, (completed / total) * 100);
+  };
+
+  const value = useMemo(
+    () => ({
+      user,
+      isLoading,
+      myCourses,
+      progress,
+      login,
+      logout,
+      hasAccessToCourse,
+      markLessonComplete,
+      getCourseProgress,
+      registerCourseLessonCount,
+      refreshMyCourses,
+    }),
+    [user, isLoading, myCourses, progress]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

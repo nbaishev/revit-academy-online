@@ -1,41 +1,42 @@
 import { Link, Navigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { courses } from '@/data/courses';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   BookOpen,
-  Clock,
   Play,
   ArrowRight,
   LogOut,
   Mail,
   User,
+  Layers,
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, logout, getCourseProgress } = useAuth();
+  const { user, logout, getCourseProgress, myCourses, isLoading } = useAuth();
 
-  if (!user) {
+  if (!user && !isLoading) {
     return <Navigate to="/" replace />;
   }
 
-  // Get user's courses (purchased + free)
-  const userCourses = courses.filter(
-    (course) =>
-      user.purchasedCourses.includes(course.id) || course.price === null
-  );
+  if (isLoading || !user) {
+    return (
+      <Layout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 lg:grid-cols-4">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 rounded-2xl border border-border bg-card p-6">
-              {/* Profile */}
               <div className="mb-6 text-center">
                 <Avatar className="mx-auto mb-4 h-20 w-20">
                   <AvatarImage src={user.avatar} alt={user.name} />
@@ -47,24 +48,13 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
 
-              {/* Stats */}
               <div className="mb-6 space-y-3 border-y border-border py-6">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Курсов в обучении</span>
-                  <span className="font-medium">{userCourses.length}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Уроков пройдено</span>
-                  <span className="font-medium">
-                    {Object.values(user.progress).reduce(
-                      (acc, p) => acc + p.completedLessons.length,
-                      0
-                    )}
-                  </span>
+                  <span className="font-medium">{myCourses.length}</span>
                 </div>
               </div>
 
-              {/* Profile Info */}
               <div className="mb-6 space-y-3">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <User className="h-4 w-4" />
@@ -76,7 +66,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Logout */}
               <Button
                 onClick={logout}
                 variant="outline"
@@ -88,18 +77,14 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             <h1 className="mb-2 text-3xl font-bold">Мои курсы</h1>
-            <p className="mb-8 text-muted-foreground">
-              Продолжайте обучение с того места, где остановились
-            </p>
+            <p className="mb-8 text-muted-foreground">Продолжайте обучение с того места, где остановились</p>
 
-            {userCourses.length > 0 ? (
+            {myCourses.length > 0 ? (
               <div className="space-y-4">
-                {userCourses.map((course) => {
+                {myCourses.map((course) => {
                   const progress = getCourseProgress(course.id);
-                  const lastLesson = user.progress[course.id]?.completedLessons.slice(-1)[0];
 
                   return (
                     <div
@@ -107,20 +92,18 @@ const Dashboard = () => {
                       className="group overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-card"
                     >
                       <div className="flex flex-col md:flex-row">
-                        {/* Thumbnail */}
                         <div className="relative aspect-video w-full md:aspect-square md:w-48">
                           <div className="absolute inset-0 flex items-center justify-center gradient-primary">
                             <BookOpen className="h-12 w-12 text-primary-foreground/50" />
                           </div>
                         </div>
 
-                        {/* Content */}
                         <div className="flex flex-1 flex-col p-6">
                           <div className="mb-2 flex items-start justify-between">
                             <h3 className="text-xl font-semibold group-hover:text-primary">
                               {course.title}
                             </h3>
-                            {course.price === null && (
+                            {course.is_free && (
                               <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500">
                                 Бесплатно
                               </span>
@@ -128,10 +111,9 @@ const Dashboard = () => {
                           </div>
 
                           <p className="mb-4 flex-1 text-sm text-muted-foreground line-clamp-2">
-                            {course.shortDescription}
+                            {course.description}
                           </p>
 
-                          {/* Progress */}
                           <div className="mb-4">
                             <div className="mb-2 flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Прогресс</span>
@@ -140,16 +122,15 @@ const Dashboard = () => {
                             <Progress value={progress} className="h-2" />
                           </div>
 
-                          {/* Footer */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
-                                {course.duration}
+                                <Layers className="h-4 w-4" />
+                                {course.modules_count ?? 0} модулей
                               </span>
                               <span className="flex items-center gap-1">
                                 <BookOpen className="h-4 w-4" />
-                                {course.lessonsCount} уроков
+                                {course.lessons_count ?? 0} уроков
                               </span>
                             </div>
 

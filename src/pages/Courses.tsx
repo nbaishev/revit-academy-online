@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { CourseCard } from '@/components/courses/CourseCard';
-import { courses } from '@/data/courses';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
+import { api } from '@/lib/api';
+import { ApiCourse } from '@/lib/types';
 
 type LevelFilter = 'all' | 'Начинающий' | 'Средний' | 'Продвинутый';
 type PriceFilter = 'all' | 'free' | 'paid';
@@ -14,25 +16,15 @@ const Courses = () => {
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
 
-  const filteredCourses = useMemo(() => {
-    return courses.filter((course) => {
-      // Search filter
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // Level filter
-      const matchesLevel = levelFilter === 'all' || course.level === levelFilter;
-
-      // Price filter
-      const matchesPrice =
-        priceFilter === 'all' ||
-        (priceFilter === 'free' && course.price === null) ||
-        (priceFilter === 'paid' && course.price !== null);
-
-      return matchesSearch && matchesLevel && matchesPrice;
-    });
-  }, [searchQuery, levelFilter, priceFilter]);
+  const { data: courses, isLoading, isError } = useQuery<ApiCourse[]>({
+    queryKey: ['courses', searchQuery, levelFilter, priceFilter],
+    queryFn: () =>
+      api.listCourses({
+        search: searchQuery || undefined,
+        level: levelFilter === 'all' ? undefined : levelFilter,
+        price: priceFilter === 'all' ? undefined : priceFilter,
+      }),
+  });
 
   const levelOptions: { value: LevelFilter; label: string }[] = [
     { value: 'all', label: 'Все уровни' },
@@ -116,28 +108,38 @@ const Courses = () => {
             </div>
           </div>
 
-          {/* Results count */}
-          <p className="mb-6 text-muted-foreground">
-            Найдено курсов: <span className="font-medium text-foreground">{filteredCourses.length}</span>
-          </p>
+          {isLoading && <p className="text-muted-foreground">Загрузка курсов...</p>}
 
-          {/* Course Grid */}
-          {filteredCourses.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
+          {isError && (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+              Не удалось загрузить курсы. Проверьте соединение или API.
             </div>
-          ) : (
-            <div className="rounded-2xl border border-border bg-card p-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <Search className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Курсы не найдены</h3>
-              <p className="text-muted-foreground">
-                Попробуйте изменить параметры поиска или фильтры
+          )}
+
+          {courses && (
+            <>
+              <p className="mb-6 text-muted-foreground">
+                Найдено курсов: <span className="font-medium text-foreground">{courses.length}</span>
               </p>
-            </div>
+
+              {courses.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {courses.map((course) => (
+                    <CourseCard key={course.id} course={course} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-12 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                    <Search className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="mb-2 text-xl font-semibold">Курсы не найдены</h3>
+                  <p className="text-muted-foreground">
+                    Попробуйте изменить параметры поиска или фильтры
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

@@ -102,7 +102,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={login} variant="default" size="default">
+            <Button onClick={() => login()} variant="default" size="default">
               Войти через Google
             </Button>
           )}
@@ -180,7 +180,7 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Button onClick={login} variant="default" className="w-full">
+                <Button onClick={() => login()} variant="default" className="w-full">
                   Войти через Google
                 </Button>
               )}
