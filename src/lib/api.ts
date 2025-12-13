@@ -63,6 +63,8 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
   return res.json() as Promise<T>;
 };
 
+type GoogleLoginPayload = { id_token?: string; code?: string; redirect_uri?: string };
+
 export const api = {
   setTokens(newTokens: AuthTokens) {
     tokens = newTokens;
@@ -76,12 +78,15 @@ export const api = {
     tokens = loadStoredTokens();
     return tokens;
   },
-  async loginWithGoogle(idToken: string) {
+  async loginWithGoogle(payload: GoogleLoginPayload) {
+    if (!payload.id_token && !payload.code) {
+      throw new Error('Google token or code is required');
+    }
     const data = await request<{ access: string; refresh: string; user: User }>(
       '/auth/login/google/',
       {
         method: 'POST',
-        body: JSON.stringify({ id_token: idToken }),
+        body: JSON.stringify(payload),
         headers: getHeaders(false),
       }
     );

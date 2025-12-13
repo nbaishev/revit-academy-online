@@ -31,7 +31,9 @@ export function HeroSection() {
 
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               Освойте{' '}
-              <span className="text-gradient">Autodesk Revit</span>
+              <span className="inline-block rounded-lg bg-blue-600 px-3 py-1 font-bold text-white shadow-lg">
+                Autodesk Revit
+              </span>
               <br />
               с нуля до профи
             </h1>

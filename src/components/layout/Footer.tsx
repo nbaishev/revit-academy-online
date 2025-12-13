@@ -13,7 +13,7 @@ export function Footer() {
                 <BookOpen className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
-                Revit<span className="text-primary">Pro</span>
+                Usta<span className="text-primary">BIM</span>
               </span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
@@ -91,7 +91,7 @@ export function Footer() {
         <div className="mt-12 border-t border-border pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2024 RevitPro. Все права защищены.
+              © 2025 UstaBIM. Все права защищены.
             </p>
             <div className="flex gap-4">
               <a

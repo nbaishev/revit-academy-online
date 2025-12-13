@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { api } from '@/lib/api';
 import { ApiCourse, ProgressEntry, User } from '@/lib/types';
-import { getGoogleIdToken } from '@/lib/googleIdentity';
+import { getGoogleAuthCode } from '@/lib/googleIdentity';
 
 interface AuthContextType {
   user: User | null;
@@ -62,10 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (idToken?: string) => {
     setIsLoading(true);
     try {
-      const token =
-        idToken ||
-        (await getGoogleIdToken(import.meta.env.VITE_GOOGLE_CLIENT_ID || ''));
-      const data = await api.loginWithGoogle(token);
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+      const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI || 'postmessage';
+      const code = await getGoogleAuthCode(clientId, redirectUri);
+      const payload = { code, redirect_uri: redirectUri };
+
+      const data = await api.loginWithGoogle(payload);
       setUser(data.user);
       await refreshMyCourses();
       const prog = await api.getProgress();
