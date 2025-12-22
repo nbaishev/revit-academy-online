@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { courses as initialCourses, Course } from '@/data/courses';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Loader2, Star, ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import {
@@ -14,59 +14,107 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { CourseForm } from './CourseForm';
+import { CourseForm, CourseFormValues, ModuleInput } from './CourseForm';
+import { api } from '@/lib/api';
+import { ApiCourse } from '@/lib/types';
 import { toast } from 'sonner';
 
 export function CoursesManagementTab() {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [editingCourse, setEditingCourse] = useState<ApiCourse | null>(null);
 
-  const filteredCourses = courses.filter(
-    (course) =>
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: courses = [], isLoading, isError } = useQuery<ApiCourse[]>({
+    queryKey: ['moderator-courses'],
+    queryFn: () => api.adminListCourses(),
+  });
 
-  const handleAddCourse = (courseData: Partial<Course>) => {
-    const newCourse: Course = {
-      id: `course-${Date.now()}`,
-      title: courseData.title || '',
-      shortDescription: courseData.shortDescription || '',
-      description: courseData.description || '',
-      thumbnail: '/placeholder.svg',
-      price: courseData.price ?? null,
-      duration: courseData.duration || '0 часов',
-      lessonsCount: courseData.lessonsCount || 0,
-      level: courseData.level || 'Начинающий',
-      modules: courseData.modules || [],
-      outcomes: courseData.outcomes || [],
-      targetAudience: courseData.targetAudience || [],
-      studentsCount: 0,
-      rating: 0,
-      instructor: 'Новый инструктор',
-    };
-    setCourses([...courses, newCourse]);
-    setIsAddDialogOpen(false);
-    toast.success('Курс успешно добавлен');
+  const syncModules = async (courseId: string, modules: ModuleInput[]) => {
+    for (const [moduleIndex, module] of modules.entries()) {
+      if (!module.title.trim()) continue;
+      const createdModule = await api.adminCreateModule(courseId, {
+        title: module.title,
+        order: module.order ?? moduleIndex + 1,
+      });
+
+      for (const [lessonIndex, lesson] of module.lessons.entries()) {
+        if (!lesson.title.trim() || !lesson.video_url.trim()) continue;
+        await api.adminCreateLesson(courseId, {
+          module_id: Number(createdModule.id),
+          title: lesson.title,
+          video_url: lesson.video_url,
+          duration: lesson.duration,
+          order: lesson.order ?? lessonIndex + 1,
+        });
+      }
+    }
   };
 
-  const handleEditCourse = (courseData: Partial<Course>) => {
+  const createCourse = useMutation({
+    mutationFn: async (data: CourseFormValues) => {
+      const { modules, ...coursePayload } = data;
+      const newCourse = await api.adminCreateCourse(coursePayload);
+      if (modules.length) {
+        await syncModules(newCourse.id, modules);
+      }
+      return newCourse;
+    },
+    onSuccess: () => {
+      toast.success('Курс успешно создан');
+      setIsAddDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['moderator-courses'] });
+    },
+    onError: (err: Error) => toast.error('Не удалось создать курс', { description: err.message }),
+  });
+
+  const updateCourse = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: CourseFormValues }) => {
+      const { modules, ...coursePayload } = data;
+      const updated = await api.adminUpdateCourse(id, coursePayload);
+      if (modules.length) {
+        await syncModules(id, modules);
+      }
+      return updated;
+    },
+    onSuccess: () => {
+      toast.success('Курс обновлен');
+      setEditingCourse(null);
+      queryClient.invalidateQueries({ queryKey: ['moderator-courses'] });
+    },
+    onError: (err: Error) => toast.error('Не удалось обновить курс', { description: err.message }),
+  });
+
+  const deleteCourse = useMutation({
+    mutationFn: (courseId: string) => api.adminDeleteCourse(courseId),
+    onSuccess: () => {
+      toast.success('Курс удален');
+      queryClient.invalidateQueries({ queryKey: ['moderator-courses'] });
+    },
+    onError: (err: Error) => toast.error('Не удалось удалить курс', { description: err.message }),
+  });
+
+  const filteredCourses = useMemo(
+    () =>
+      courses.filter(
+        (course) =>
+          course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          course.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [courses, searchQuery]
+  );
+
+  const handleAddCourse = async (courseData: CourseFormValues) => {
+    await createCourse.mutateAsync(courseData);
+  };
+
+  const handleEditCourse = async (courseData: CourseFormValues) => {
     if (!editingCourse) return;
-    
-    setCourses(
-      courses.map((c) =>
-        c.id === editingCourse.id ? { ...c, ...courseData } : c
-      )
-    );
-    setEditingCourse(null);
-    toast.success('Курс успешно обновлён');
+    await updateCourse.mutateAsync({ id: editingCourse.id, data: courseData });
   };
 
   const handleDeleteCourse = (courseId: string) => {
-    setCourses(courses.filter((c) => c.id !== courseId));
-    toast.success('Курс удалён');
+    deleteCourse.mutate(courseId);
   };
 
   return (
@@ -92,108 +140,155 @@ export function CoursesManagementTab() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Создать новый курс</DialogTitle>
-              <DialogDescription>
-                Заполните информацию о новом курсе
-              </DialogDescription>
+              <DialogDescription>Данные сохранятся в базе через API</DialogDescription>
             </DialogHeader>
-            <CourseForm onSubmit={handleAddCourse} onCancel={() => setIsAddDialogOpen(false)} />
+            <CourseForm
+              onSubmit={handleAddCourse}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Courses list */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Все курсы ({filteredCourses.length})</CardTitle>
           <CardDescription>Управление курсами платформы</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredCourses.map((course) => (
-              <div
-                key={course.id}
-                className="flex flex-col gap-4 rounded-lg border border-border/50 bg-background/50 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex items-start gap-4">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="h-16 w-24 rounded-lg object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-medium">{course.title}</h4>
-                      {course.price === null ? (
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-600">
-                          Бесплатно
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">{course.price.toLocaleString()} ₽</Badge>
-                      )}
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
-                      {course.shortDescription}
-                    </p>
-                    <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{course.level}</span>
-                      <span>•</span>
-                      <span>{course.duration}</span>
-                      <span>•</span>
-                      <span>{course.lessonsCount} уроков</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/courses/${course.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Dialog
-                    open={editingCourse?.id === course.id}
-                    onOpenChange={(open) => !open && setEditingCourse(null)}
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Загружаем курсы...
+            </div>
+          )}
+          {isError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+              Не удалось загрузить курсы. Проверьте доступ и токен модератора.
+            </div>
+          )}
+
+          {!isLoading && !isError && (
+            <div className="space-y-4">
+              {filteredCourses.map((course) => {
+                const isFree = course.is_free || course.price === null || course.price === undefined;
+                const lessonsCount = course.lessons_count ?? 0;
+                const modulesCount = course.modules_count ?? 0;
+                return (
+                  <div
+                    key={course.id}
+                    className="flex flex-col gap-4 rounded-lg border border-border/50 bg-background/50 p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <DialogTrigger asChild>
+                    <div className="flex items-start gap-4">
+                      <div className="relative h-16 w-24 overflow-hidden rounded-lg bg-muted">
+                        {course.preview_image ? (
+                          <img
+                            src={course.preview_image}
+                            alt={course.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                            <ImageIcon className="h-6 w-6" />
+                          </div>
+                        )}
+                        {course.is_featured && (
+                          <div className="absolute left-1 top-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                            Хит
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-medium">{course.title}</h4>
+                          <Badge variant="secondary" className="bg-background/80">
+                            {course.level}
+                          </Badge>
+                          {course.is_featured && (
+                            <Badge className="bg-amber-500 text-white">
+                              <Star className="mr-1 h-3 w-3" />
+                              Избранный
+                            </Badge>
+                          )}
+                          {isFree ? (
+                            <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                              Бесплатно
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              {(course.price ?? 0).toLocaleString()} ₽
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+                          {course.description}
+                        </p>
+                        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>{modulesCount} модулей</span>
+                          <span>•</span>
+                          <span>{lessonsCount} уроков</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link to={`/courses/${course.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Dialog
+                        open={editingCourse?.id === course.id}
+                        onOpenChange={(open) => !open && setEditingCourse(null)}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingCourse(course)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Редактировать курс</DialogTitle>
+                            <DialogDescription>
+                              Обновление информации сохраняется через API
+                            </DialogDescription>
+                          </DialogHeader>
+                          <CourseForm
+                            key={course.id}
+                            course={course}
+                            onSubmit={handleEditCourse}
+                            onCancel={() => setEditingCourse(null)}
+                          />
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setEditingCourse(course)}
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteCourse(course.id)}
+                        disabled={deleteCourse.isPending}
                       >
-                        <Edit className="h-4 w-4" />
+                        {deleteCourse.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Редактировать курс</DialogTitle>
-                        <DialogDescription>
-                          Измените информацию о курсе
-                        </DialogDescription>
-                      </DialogHeader>
-                      <CourseForm
-                        course={course}
-                        onSubmit={handleEditCourse}
-                        onCancel={() => setEditingCourse(null)}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteCourse(course.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                    </div>
+                  </div>
+                );
+              })}
 
-            {filteredCourses.length === 0 && (
-              <div className="py-12 text-center text-muted-foreground">
-                Курсы не найдены
-              </div>
-            )}
-          </div>
+              {filteredCourses.length === 0 && (
+                <div className="py-12 text-center text-muted-foreground">
+                  Курсы не найдены
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

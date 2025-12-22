@@ -4,12 +4,29 @@ import { clearTokens, loadTokens as loadStoredTokens, saveTokens } from './token
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 type RequestOptions = RequestInit & { auth?: boolean };
+type AdminCoursePayload = {
+  id?: string;
+  title: string;
+  description: string;
+  full_description?: string;
+  is_free: boolean;
+  level: string;
+  price?: number | null;
+  preview_image?: File | string | null;
+  background_video_url?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  is_featured?: boolean;
+};
 
 let tokens: AuthTokens | null = loadStoredTokens();
 let isRefreshing = false;
 
-const getHeaders = (auth?: boolean): HeadersInit => {
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+const getHeaders = (auth?: boolean, includeContentType = true): HeadersInit => {
+  const headers: HeadersInit = {};
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (auth && tokens?.access) {
     headers['Authorization'] = `Bearer ${tokens.access}`;
   }
@@ -41,10 +58,11 @@ const refreshAccessToken = async () => {
 
 const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
   const url = `${API_BASE_URL}${path}`;
+  const isFormData = options.body instanceof FormData;
   const res = await fetch(url, {
     ...options,
     headers: {
-      ...getHeaders(options.auth),
+      ...getHeaders(options.auth, !isFormData),
       ...(options.headers || {}),
     },
   });
@@ -61,6 +79,26 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
     throw new Error(`API ${res.status}: ${errorBody}`);
   }
   return res.json() as Promise<T>;
+};
+
+const hasCourseFile = (payload: Partial<AdminCoursePayload>) =>
+  payload.preview_image instanceof File;
+
+const toCourseFormData = (payload: Partial<AdminCoursePayload>) => {
+  const formData = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === undefined) return;
+    if (value === null) {
+      formData.append(key, '');
+      return;
+    }
+    if (value instanceof File) {
+      formData.append(key, value);
+      return;
+    }
+    formData.append(key, String(value));
+  });
+  return formData;
 };
 
 type GoogleLoginPayload = { id_token?: string; code?: string; redirect_uri?: string };
@@ -115,7 +153,7 @@ export const api = {
     if (params.search) query.set('search', params.search);
     if (params.level && params.level !== 'all') query.set('level', params.level);
     if (params.price) query.set('price', params.price);
-    if (params.is_featured) query.set('is_featured', 'True');
+    if (params.is_featured !== undefined) query.set('is_featured', params.is_featured ? 'True' : 'False');
     query.set('page_size', '100');
     const res = await request<{ results?: ApiCourse[]; count?: number; next?: string; previous?: string }>(
       `/courses/${query.toString() ? `?${query.toString()}` : ''}`
@@ -135,7 +173,46 @@ export const api = {
       body: JSON.stringify({ course_id: courseId }),
     });
   },
+  async adminListCourses() {
+    return request<ApiCourse[]>('/moderator/courses/', { auth: true });
+  },
+  async adminCreateCourse(payload: AdminCoursePayload) {
+    const body = hasCourseFile(payload) ? toCourseFormData(payload) : JSON.stringify(payload);
+    return request<ApiCourse>('/moderator/courses/', {
+      method: 'POST',
+      auth: true,
+      body,
+    });
+  },
+  async adminUpdateCourse(id: string, payload: Partial<AdminCoursePayload>) {
+    const body = hasCourseFile(payload) ? toCourseFormData(payload) : JSON.stringify(payload);
+    return request<ApiCourse>(`/moderator/courses/${id}/`, {
+      method: 'PATCH',
+      auth: true,
+      body,
+    });
+  },
+  async adminDeleteCourse(id: string) {
+    return request<void>(`/moderator/courses/${id}/`, { method: 'DELETE', auth: true });
+  },
+  async adminCreateModule(courseId: string, payload: { title: string; order?: number }) {
+    return request<import('./types').ApiModule>(`/moderator/courses/${courseId}/modules/`, {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
+    });
+  },
+  async adminCreateLesson(
+    courseId: string,
+    payload: { module_id: number; title: string; video_url: string; order?: number; duration?: string }
+  ) {
+    return request<import('./types').ApiLesson>(`/moderator/courses/${courseId}/lessons/`, {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
+    });
+  },
   async adminStats() {
-    return request<import('./types').AdminStats>('/admin/stats/', { auth: true });
+    return request<import('./types').AdminStats>('/moderator/stats/', { auth: true });
   },
 };

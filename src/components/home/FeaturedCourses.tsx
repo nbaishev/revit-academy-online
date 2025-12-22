@@ -9,7 +9,12 @@ import { ApiCourse } from '@/lib/types';
 export function FeaturedCourses() {
   const { data: featuredCourses, isLoading } = useQuery<ApiCourse[]>({
     queryKey: ['courses', 'featured'],
-    queryFn: () => api.listCourses({ is_featured: true }),
+    queryFn: async () => {
+      const featured = await api.listCourses({ is_featured: true });
+      if (featured.length > 0) return featured;
+      // Fallback: показываем все курсы, если нет отмеченных как избранные
+      return api.listCourses();
+    },
   });
 
   return (
