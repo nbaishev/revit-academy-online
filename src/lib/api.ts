@@ -174,7 +174,11 @@ export const api = {
     });
   },
   async adminListCourses() {
-    return request<ApiCourse[]>('/moderator/courses/', { auth: true });
+    const res = await request<{ results?: ApiCourse[]; count?: number; next?: string; previous?: string }>(
+      '/moderator/courses/',
+      { auth: true }
+    );
+    return res.results ?? (res as unknown as ApiCourse[]);
   },
   async adminCreateCourse(payload: AdminCoursePayload) {
     const body = hasCourseFile(payload) ? toCourseFormData(payload) : JSON.stringify(payload);

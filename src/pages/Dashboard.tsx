@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { pluralizeRu } from '@/lib/utils';
 import {
   BookOpen,
   Play,
@@ -85,6 +86,8 @@ const Dashboard = () => {
               <div className="space-y-4">
                 {myCourses.map((course) => {
                   const progress = getCourseProgress(course.id);
+                  const modulesCount = course.modules_count ?? 0;
+                  const lessonsCount = course.lessons_count ?? 0;
 
                   return (
                     <div
@@ -126,11 +129,11 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Layers className="h-4 w-4" />
-                                {course.modules_count ?? 0} модулей
+                                {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
                               </span>
                               <span className="flex items-center gap-1">
                                 <BookOpen className="h-4 w-4" />
-                                {course.lessons_count ?? 0} уроков
+                                {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
                               </span>
                             </div>
 

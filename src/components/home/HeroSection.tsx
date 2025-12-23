@@ -26,7 +26,7 @@ export function HeroSection() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
               </span>
-              Более 1500 студентов уже обучаются
+              Более 20 студентов уже обучаются
             </div>
 
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">

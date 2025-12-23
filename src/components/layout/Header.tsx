@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LegalConsentText } from '@/components/legal/LegalConsentText';
 
 export function Header() {
   const { user, login, logout } = useAuth();
@@ -26,7 +27,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex min-h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
@@ -88,7 +89,7 @@ export function Header() {
                 </DropdownMenuItem>
                 {user.role === 'moderator' && (
                   <DropdownMenuItem asChild>
-                    <Link to="/admin" className="flex cursor-pointer items-center">
+                    <Link to="/moderator" className="flex cursor-pointer items-center">
                       <User className="mr-2 h-4 w-4" />
                       Панель модератора
                     </Link>
@@ -102,9 +103,12 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => login()} variant="default" size="default">
-              Войти через Google
-            </Button>
+            <div className="flex flex-col items-end gap-1 text-right">
+              <Button onClick={() => login()} variant="default" size="default">
+                Войти через Google
+              </Button>
+              <LegalConsentText className="max-w-[320px] text-[11px] leading-tight" />
+            </div>
           )}
         </div>
 
@@ -160,7 +164,7 @@ export function Header() {
                   </Link>
                   {user.role === 'moderator' && (
                     <Link
-                      to="/admin"
+                      to="/moderator"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted"
                     >
@@ -180,9 +184,12 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Button onClick={() => login()} variant="default" className="w-full">
-                  Войти через Google
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button onClick={() => login()} variant="default" className="w-full">
+                    Войти через Google
+                  </Button>
+                  <LegalConsentText />
+                </div>
               )}
             </div>
           </nav>

@@ -17,6 +17,7 @@ import {
 import { CourseForm, CourseFormValues, ModuleInput } from './CourseForm';
 import { api } from '@/lib/api';
 import { ApiCourse } from '@/lib/types';
+import { pluralizeRu } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function CoursesManagementTab() {
@@ -216,7 +217,7 @@ export function CoursesManagementTab() {
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
-                              {(course.price ?? 0).toLocaleString()} ₽
+                              {(course.price ?? 0).toLocaleString()} сом
                             </Badge>
                           )}
                         </div>
@@ -224,9 +225,13 @@ export function CoursesManagementTab() {
                           {course.description}
                         </p>
                         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{modulesCount} модулей</span>
+                          <span>
+                            {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
+                          </span>
                           <span>•</span>
-                          <span>{lessonsCount} уроков</span>
+                          <span>
+                            {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -223,7 +223,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
 
         {!isFree && (
           <div className="space-y-2">
-            <Label htmlFor="price">Цена (₽)</Label>
+            <Label htmlFor="price">Цена (сом)</Label>
             <Input
               id="price"
               type="number"

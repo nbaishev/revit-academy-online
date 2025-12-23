@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ApiCourse } from '@/lib/types';
-import { BookOpen, CircleDollarSign, Layers } from 'lucide-react';
+import { BookOpen, Coins, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, pluralizeRu } from '@/lib/utils';
 
 interface CourseCardProps {
   course: ApiCourse;
@@ -24,7 +24,7 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
         className,
       )}
     >
-      <div className="relative aspect-video overflow-hidden bg-muted">
+      <div className="relative aspect-video overflow-hidden rounded-t-2xl bg-muted">
         {course.preview_image ? (
           <img
             src={course.preview_image}
@@ -44,7 +44,7 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
               isFree ? 'bg-green-500 text-white hover:bg-green-500' : 'bg-background/90 text-foreground backdrop-blur-sm'
             }`}
           >
-            {isFree ? 'Бесплатно' : `${priceLabel} ₽`}
+            {isFree ? 'Бесплатно' : `${priceLabel} сом`}
           </Badge>
         </div>
 
@@ -66,15 +66,19 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
-            <span>{lessonsCount} уроков</span>
+            <span>
+              {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <Layers className="h-4 w-4" />
-            <span>{modulesCount} модулей</span>
+            <span>
+              {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
+            </span>
           </div>
           {!isFree && (
             <div className="flex items-center gap-1">
-              <CircleDollarSign className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
               <span>{priceLabel}</span>
             </div>
           )}

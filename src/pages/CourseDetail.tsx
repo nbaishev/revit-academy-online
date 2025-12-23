@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
+import { LegalConsentText } from '@/components/legal/LegalConsentText';
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, CheckCircle2, Play, Lock, ArrowLeft, Award, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,72 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
 import { ApiCourse } from '@/lib/types';
+import { pluralizeRu } from '@/lib/utils';
+
+type VideoSource = { type: 'iframe'; src: string } | { type: 'file'; src: string };
+
+const normalizeVideoUrl = (value: string) => {
+  if (value.startsWith('//')) return `https:${value}`;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.includes('.')) return `https://${value}`;
+  return value;
+};
+
+const resolveVideoSource = (rawVideoUrl?: string): VideoSource | null => {
+  const raw = (rawVideoUrl ?? '').trim();
+  if (!raw) return null;
+
+  const normalized = normalizeVideoUrl(raw);
+  if (!/^https?:\/\//i.test(normalized)) {
+    return { type: 'iframe', src: `https://www.youtube.com/embed/${normalized}` };
+  }
+
+  try {
+    const url = new URL(normalized);
+    const hostname = url.hostname.replace(/^www\./i, '').toLowerCase();
+
+    if (hostname === 'youtu.be') {
+      const id = url.pathname.split('/').filter(Boolean)[0];
+      if (id) return { type: 'iframe', src: `https://www.youtube.com/embed/${id}` };
+    }
+
+    if (
+      hostname === 'youtube.com' ||
+      hostname === 'm.youtube.com' ||
+      hostname === 'youtube-nocookie.com'
+    ) {
+      if (url.pathname.startsWith('/embed/')) {
+        return { type: 'iframe', src: normalized };
+      }
+      if (url.pathname.startsWith('/shorts/') || url.pathname.startsWith('/live/')) {
+        const id = url.pathname.split('/').filter(Boolean)[1];
+        if (id) return { type: 'iframe', src: `https://www.youtube.com/embed/${id}` };
+      }
+      if (url.pathname === '/watch') {
+        const id = url.searchParams.get('v');
+        if (id) return { type: 'iframe', src: `https://www.youtube.com/embed/${id}` };
+      }
+    }
+
+    if (hostname === 'vimeo.com' || hostname === 'player.vimeo.com') {
+      if (hostname === 'player.vimeo.com' && url.pathname.startsWith('/video/')) {
+        return { type: 'iframe', src: normalized };
+      }
+      const vimeoId = url.pathname.split('/').filter(Boolean)[0];
+      if (vimeoId) {
+        return { type: 'iframe', src: `https://player.vimeo.com/video/${vimeoId}` };
+      }
+    }
+
+    if (/\.(mp4|webm|ogg|mov|m3u8)$/i.test(url.pathname)) {
+      return { type: 'file', src: normalized };
+    }
+
+    return { type: 'iframe', src: normalized };
+  } catch {
+    return { type: 'iframe', src: raw };
+  }
+};
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -57,6 +124,11 @@ const CourseDetail = () => {
   const selectedLessonData = selectedLesson
     ? content?.modules?.flatMap((m) => m.lessons).find((l) => l.id === selectedLesson)
     : null;
+  const rawVideoUrl =
+    selectedLessonData?.video_url ||
+    (selectedLessonData as { videoId?: string } | null)?.videoId ||
+    '';
+  const videoSource = resolveVideoSource(rawVideoUrl);
 
   if (!courseId || isError) {
     return <Navigate to="/courses" replace />;
@@ -75,6 +147,8 @@ const CourseDetail = () => {
   const hasAccess = hasAccessToCourse({ id: course.id, is_free: course.is_free });
   const isFree = course.is_free || course.price === null;
   const courseProgress = getCourseProgress(course.id);
+  const lessonsCount = course.lessons_count ?? 0;
+  const modulesCount = course.modules_count ?? 0;
 
   // User with access - show learning interface
   if (user && hasAccess && content) {
@@ -87,13 +161,31 @@ const CourseDetail = () => {
               <div className="flex h-full flex-col">
                 {/* Video Player */}
                 <div className="relative aspect-video w-full bg-foreground">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${selectedLessonData.videoId}`}
-                    title={selectedLessonData.title}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  {videoSource ? (
+                    videoSource.type === 'file' ? (
+                      <video
+                        src={videoSource.src}
+                        className="absolute inset-0 h-full w-full"
+                        controls
+                        playsInline
+                      />
+                    ) : (
+                      <iframe
+                        src={videoSource.src}
+                        title={selectedLessonData.title}
+                        className="absolute inset-0 h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    )
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                      <div className="text-center">
+                        <Play className="mx-auto mb-2 h-8 w-8" />
+                        Видео недоступно
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Lesson Info */}
@@ -227,11 +319,11 @@ const CourseDetail = () => {
               <div className="mb-6 flex flex-wrap items-center gap-6 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5" />
-                  <span>{course.lessons_count ?? 0} уроков</span>
+                  <span>{lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Layers className="h-5 w-5" />
-                  <span>{course.modules_count ?? 0} модулей</span>
+                  <span>{modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}</span>
                 </div>
               </div>
             </div>
@@ -250,7 +342,7 @@ const CourseDetail = () => {
                     <div className="text-3xl font-bold text-green-500">Бесплатно</div>
                   ) : (
                     <div className="text-3xl font-bold">
-                      {course.price?.toLocaleString('ru-RU')} ₽
+                      {course.price?.toLocaleString('ru-RU')} сом
                     </div>
                   )}
                 </div>
@@ -269,24 +361,24 @@ const CourseDetail = () => {
                       variant="hero"
                       size="lg"
                       className="w-full"
-                      onClick={async () => {
-                        await api.purchaseCourse(course.id);
-                        await refreshMyCourses();
-                      }}
+                      disabled
                     >
                       Купить курс
                     </Button>
                   )
                 ) : (
-                  <Button onClick={() => login()} variant="hero" size="lg" className="w-full">
-                    Войти, чтобы начать
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={() => login()} variant="hero" size="lg" className="w-full">
+                      Войти, чтобы начать
+                    </Button>
+                    <LegalConsentText className="text-center" />
+                  </div>
                 )}
 
                 <ul className="mt-6 space-y-3 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>{course.lessons_count ?? 0} видеоуроков</span>
+                    <span>{lessonsCount} {pluralizeRu(lessonsCount, ['видеоурок', 'видеоурока', 'видеоуроков'])}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -329,7 +421,7 @@ const CourseDetail = () => {
                     <div className="text-left">
                       <div className="font-semibold">{module.title}</div>
                       <div className="text-sm text-muted-foreground">
-                        {module.lessons.length} уроков
+                        {module.lessons.length} {pluralizeRu(module.lessons.length, ['урок', 'урока', 'уроков'])}
                       </div>
                     </div>
                   </div>
