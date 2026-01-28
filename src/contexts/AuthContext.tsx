@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   hasAccessToCourse: (course: Pick<ApiCourse, 'id' | 'is_free'>) => boolean;
   markLessonComplete: (courseId: string, lessonId: string) => Promise<void>;
+  markLessonViewed: (courseId: string, lessonId: string) => Promise<void>;
   getCourseProgress: (courseId: string) => number;
   registerCourseLessonCount: (courseId: string, totalLessons: number) => void;
   refreshMyCourses: () => Promise<void>;
@@ -100,6 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const markLessonViewed = async (courseId: string, lessonId: string) => {
+    const entry = await api.viewLesson(courseId, lessonId);
+    setProgress((prev) => {
+      const existing = prev.find((p) => p.id === entry.id);
+      if (existing) {
+        return prev.map((p) =>
+          p.id === entry.id
+            ? {
+                ...entry,
+                is_completed: existing.is_completed || entry.is_completed,
+                completed_at: existing.completed_at ?? entry.completed_at,
+              }
+            : p
+        );
+      }
+      return [...prev, entry];
+    });
+  };
+
   const registerCourseLessonCount = (courseId: string, totalLessons: number) => {
     setLessonTotals((prev) => ({ ...prev, [courseId]: totalLessons }));
   };
@@ -121,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       hasAccessToCourse,
       markLessonComplete,
+      markLessonViewed,
       getCourseProgress,
       registerCourseLessonCount,
       refreshMyCourses,

@@ -85,6 +85,34 @@ export async function getGoogleAuthCode(clientId: string, redirectUri?: string):
       reject(new Error('Google OAuth2 code client not available'));
       return;
     }
+    let finished = false;
+    let focusTimeout: number | null = null;
+    let overallTimeout: number | null = null;
+
+    const cleanup = () => {
+      window.removeEventListener('focus', handleFocus);
+      if (focusTimeout) window.clearTimeout(focusTimeout);
+      if (overallTimeout) window.clearTimeout(overallTimeout);
+    };
+
+    const finish = (fn: (value: any) => void, value: any) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      fn(value);
+    };
+
+    const handleFocus = () => {
+      if (finished) return;
+      if (focusTimeout) window.clearTimeout(focusTimeout);
+      // Give the callback a moment to arrive after the popup closes.
+      focusTimeout = window.setTimeout(() => {
+        if (!finished) {
+          finish(reject, new Error('Google login was cancelled'));
+        }
+      }, 800);
+    };
+
     const codeClient = googleObj.accounts.oauth2.initCodeClient({
       client_id: clientId,
       scope: 'openid email profile',
@@ -93,12 +121,28 @@ export async function getGoogleAuthCode(clientId: string, redirectUri?: string):
       redirect_uri: redirectUri || 'postmessage',
       callback: (resp: any) => {
         if (resp?.code) {
-          resolve(resp.code);
-        } else {
-          reject(new Error('Google did not return auth code'));
+          finish(resolve, resp.code);
+          return;
         }
+        finish(reject, new Error('Google did not return auth code'));
+      },
+      error_callback: (err: any) => {
+        const message =
+          err?.error || err?.message || 'Google login failed';
+        finish(reject, new Error(message));
       },
     });
-    codeClient.requestCode();
+    window.addEventListener('focus', handleFocus);
+    overallTimeout = window.setTimeout(() => {
+      if (!finished) {
+        finish(reject, new Error('Google login timed out'));
+      }
+    }, 120_000);
+
+    try {
+      codeClient.requestCode();
+    } catch (error) {
+      finish(reject, error instanceof Error ? error : new Error('Google login failed'));
+    }
   });
 }

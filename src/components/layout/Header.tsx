@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { BookOpen, User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LegalConsentText } from '@/components/legal/LegalConsentText';
 
 export function Header() {
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -24,6 +24,14 @@ export function Header() {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+  const handleLoginClick = () => {
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    navigate('/login', { state: { from } });
+  };
+  const handleMobileLoginClick = () => {
+    setIsMobileMenuOpen(false);
+    handleLoginClick();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg">
@@ -103,12 +111,9 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex flex-col items-end gap-1 text-right">
-              <Button onClick={() => login()} variant="default" size="default">
-                Войти через Google
-              </Button>
-              <LegalConsentText className="max-w-[320px] text-[11px] leading-tight" />
-            </div>
+            <Button onClick={handleLoginClick} variant="default" size="default">
+              Войти через Google
+            </Button>
           )}
         </div>
 
@@ -185,10 +190,9 @@ export function Header() {
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Button onClick={() => login()} variant="default" className="w-full">
+                  <Button onClick={handleMobileLoginClick} variant="default" className="w-full">
                     Войти через Google
                   </Button>
-                  <LegalConsentText />
                 </div>
               )}
             </div>

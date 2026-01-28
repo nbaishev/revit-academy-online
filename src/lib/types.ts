@@ -56,6 +56,7 @@ export interface ProgressEntry {
   lesson: ApiLesson;
   is_completed: boolean;
   completed_at?: string;
+  last_viewed_at?: string;
 }
 
 export interface AuthTokens {

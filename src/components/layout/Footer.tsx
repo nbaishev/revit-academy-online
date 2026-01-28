@@ -31,12 +31,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/courses?level=beginner" className="transition-colors hover:text-primary">
+                <Link to="/courses?level=Начинающий" className="transition-colors hover:text-primary">
                   Для начинающих
                 </Link>
               </li>
               <li>
-                <Link to="/courses?level=advanced" className="transition-colors hover:text-primary">
+                <Link to="/courses?level=Продвинутый" className="transition-colors hover:text-primary">
                   Продвинутые
                 </Link>
               </li>

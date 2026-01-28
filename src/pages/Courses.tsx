@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { CourseCard } from '@/components/courses/CourseCard';
 import { Button } from '@/components/ui/button';
@@ -11,10 +12,49 @@ import { ApiCourse } from '@/lib/types';
 type LevelFilter = 'all' | 'Начинающий' | 'Средний' | 'Продвинутый';
 type PriceFilter = 'all' | 'free' | 'paid';
 
+const LEVEL_PARAM_MAP: Record<string, Exclude<LevelFilter, 'all'>> = {
+  beginner: 'Начинающий',
+  intermediate: 'Средний',
+  advanced: 'Продвинутый',
+  начинающий: 'Начинающий',
+  средний: 'Средний',
+  продвинутый: 'Продвинутый',
+};
+
+const resolveLevelFilter = (value: string | null): LevelFilter => {
+  if (!value) return 'all';
+  const trimmed = value.trim();
+  if (!trimmed) return 'all';
+  return LEVEL_PARAM_MAP[trimmed] ?? LEVEL_PARAM_MAP[trimmed.toLowerCase()] ?? 'all';
+};
+
+const resolvePriceFilter = (value: string | null): PriceFilter => {
+  if (value === 'free' || value === 'paid') return value;
+  return 'all';
+};
+
+const parseFiltersFromSearch = (search: string) => {
+  const params = new URLSearchParams(search);
+  return {
+    searchQuery: params.get('search') ?? '',
+    levelFilter: resolveLevelFilter(params.get('level')),
+    priceFilter: resolvePriceFilter(params.get('price')),
+  };
+};
+
 const Courses = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
-  const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
+  const location = useLocation();
+  const initialFilters = parseFiltersFromSearch(location.search);
+  const [searchQuery, setSearchQuery] = useState(initialFilters.searchQuery);
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>(initialFilters.levelFilter);
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>(initialFilters.priceFilter);
+
+  useEffect(() => {
+    const nextFilters = parseFiltersFromSearch(location.search);
+    setSearchQuery(nextFilters.searchQuery);
+    setLevelFilter(nextFilters.levelFilter);
+    setPriceFilter(nextFilters.priceFilter);
+  }, [location.search]);
 
   const { data: courses, isLoading, isError } = useQuery<ApiCourse[]>({
     queryKey: ['courses', searchQuery, levelFilter, priceFilter],

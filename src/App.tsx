@@ -9,6 +9,7 @@ import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import Dashboard from "./pages/Dashboard";
 import ModeratorPanel from "./pages/ModeratorPanel";
+import LoginConsent from "./pages/LoginConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +24,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:courseId/lessons/:lessonId" element={<CourseDetail />} />
             <Route path="/courses/:courseId" element={<CourseDetail />} />
+            <Route path="/login" element={<LoginConsent />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/moderator" element={<ModeratorPanel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

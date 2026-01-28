@@ -148,6 +148,13 @@ export const api = {
       body: JSON.stringify({ course_id: courseId, lesson_id: lessonId }),
     });
   },
+  async viewLesson(courseId: string, lessonId: string) {
+    return request<ProgressEntry>('/me/progress/view/', {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify({ course_id: courseId, lesson_id: lessonId }),
+    });
+  },
   async listCourses(params: { search?: string; level?: string; price?: string; is_featured?: boolean } = {}) {
     const query = new URLSearchParams();
     if (params.search) query.set('search', params.search);
