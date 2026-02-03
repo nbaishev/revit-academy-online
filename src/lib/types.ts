@@ -13,6 +13,7 @@ export interface ApiLesson {
   order: number;
   duration?: string;
   video_url?: string;
+  additional_materials?: string | null;
 }
 
 export interface ApiModule {
@@ -30,6 +31,7 @@ export interface ApiCourse {
   is_free: boolean;
   level: string;
   price?: number | null;
+  discount_price?: number | null;
   preview_image?: string | null;
   background_video_url?: string | null;
   seo_title?: string | null;
@@ -44,7 +46,10 @@ export interface ApiCourse {
 
 export interface Purchase {
   id: string;
+  payment_id?: string;
+  payment_url?: string;
   course: ApiCourse;
+  amount?: number;
   status: 'pending' | 'paid' | 'cancelled';
   transaction_id?: string;
   created_at: string;

@@ -12,6 +12,7 @@ type AdminCoursePayload = {
   is_free: boolean;
   level: string;
   price?: number | null;
+  discount_price?: number | null;
   preview_image?: File | string | null;
   background_video_url?: string | null;
   seo_title?: string | null;
@@ -215,10 +216,28 @@ export const api = {
   },
   async adminCreateLesson(
     courseId: string,
-    payload: { module_id: number; title: string; video_url: string; order?: number; duration?: string }
+    payload: {
+      module_id: number;
+      title: string;
+      video_url: string;
+      order?: number;
+      duration?: string;
+      additional_materials?: string | null;
+    }
   ) {
     return request<import('./types').ApiLesson>(`/moderator/courses/${courseId}/lessons/`, {
       method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
+    });
+  },
+  async adminUpdateLesson(
+    courseId: string,
+    lessonId: string,
+    payload: { additional_materials: string | null }
+  ) {
+    return request<import('./types').ApiLesson>(`/moderator/courses/${courseId}/lessons/${lessonId}/`, {
+      method: 'PATCH',
       auth: true,
       body: JSON.stringify(payload),
     });

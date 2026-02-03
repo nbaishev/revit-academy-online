@@ -173,6 +173,16 @@ export function CoursesManagementTab() {
             <div className="space-y-4">
               {filteredCourses.map((course) => {
                 const isFree = course.is_free || course.price === null || course.price === undefined;
+                const priceValue = typeof course.price === 'number' ? course.price : null;
+                const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
+                const hasDiscount =
+                  !isFree &&
+                  priceValue !== null &&
+                  discountValue !== null &&
+                  discountValue > 0 &&
+                  discountValue < priceValue;
+                const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
+                const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
                 const lessonsCount = course.lessons_count ?? 0;
                 const modulesCount = course.modules_count ?? 0;
                 return (
@@ -215,9 +225,14 @@ export function CoursesManagementTab() {
                             <Badge variant="secondary" className="bg-green-500/10 text-green-600">
                               Бесплатно
                             </Badge>
+                          ) : hasDiscount ? (
+                            <Badge variant="secondary" className="flex items-baseline gap-2">
+                              <span className="line-through text-muted-foreground">{priceLabel}</span>
+                              <span className="font-semibold">{discountLabel} сом</span>
+                            </Badge>
                           ) : (
                             <Badge variant="secondary">
-                              {(course.price ?? 0).toLocaleString()} сом
+                              {priceLabel} сом
                             </Badge>
                           )}
                         </div>

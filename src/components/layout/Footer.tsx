@@ -70,18 +70,23 @@ export function Footer() {
             <h3 className="mb-4 font-semibold">Информация</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="transition-colors hover:text-primary">
+                <a
+                  href="/static/user_agreement.pdf"
+                  className="transition-colors hover:text-primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Пользовательское соглашение
                 </a>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-primary">
+                <a
+                  href="/static/privacy_policy.pdf"
+                  className="transition-colors hover:text-primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Политика конфиденциальности
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-primary">
-                  Оплата и возврат
                 </a>
               </li>
             </ul>

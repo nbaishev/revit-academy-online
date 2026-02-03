@@ -38,6 +38,7 @@ export type CourseFormValues = {
   level: CourseLevel;
   is_free: boolean;
   price?: number | null;
+  discount_price?: number | null;
   preview_image?: File | null;
   background_video_url?: string;
   is_featured?: boolean;
@@ -57,6 +58,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const [level, setLevel] = useState<CourseLevel>((course?.level as CourseLevel) || 'Начинающий');
   const [isFree, setIsFree] = useState(course?.is_free ?? true);
   const [price, setPrice] = useState(course?.price?.toString() || '');
+  const [discountPrice, setDiscountPrice] = useState(course?.discount_price?.toString() || '');
   const [previewImageFile, setPreviewImageFile] = useState<File | null>(null);
   const [previewImagePreview, setPreviewImagePreview] = useState(course?.preview_image || '');
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState(course?.background_video_url || '');
@@ -84,6 +86,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
     e.preventDefault();
 
     const parsedPrice = price !== '' ? Number(price) : null;
+    const parsedDiscountPrice = discountPrice !== '' ? Number(discountPrice) : null;
 
     const payload: CourseFormValues = {
       title,
@@ -92,6 +95,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
       level,
       is_free: isFree,
       price: isFree ? null : parsedPrice,
+      discount_price: isFree ? null : parsedDiscountPrice,
       preview_image: previewImageFile || undefined,
       background_video_url: backgroundVideoUrl || undefined,
       is_featured: isFeatured,
@@ -222,17 +226,33 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
         </div>
 
         {!isFree && (
-          <div className="space-y-2">
-            <Label htmlFor="price">Цена (сом)</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="Введите цену курса"
-              required={!isFree}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="price">Цена (сом)</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="Введите цену курса"
+                required={!isFree}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discountPrice">Цена со скидкой (сом)</Label>
+              <Input
+                id="discountPrice"
+                type="number"
+                min="0"
+                value={discountPrice}
+                onChange={(e) => setDiscountPrice(e.target.value)}
+                placeholder="Введите цену со скидкой"
+              />
+              <p className="text-xs text-muted-foreground">
+                Оставьте пустым, если скидки нет.
+              </p>
+            </div>
           </div>
         )}
 

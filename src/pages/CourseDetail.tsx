@@ -92,13 +92,15 @@ const CourseDetail = () => {
     markLessonViewed,
     getCourseProgress,
     registerCourseLessonCount,
-    progress,
     refreshMyCourses,
+    progress,
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const hasUserSelected = useRef(false);
   const lastViewedSent = useRef<string | null>(null);
   const handleLoginClick = () => {
@@ -202,11 +204,69 @@ const CourseDetail = () => {
   const selectedLessonData = selectedLesson
     ? content?.modules?.flatMap((m) => m.lessons).find((l) => String(l.id) === selectedLesson)
     : null;
+  const selectedLessonIndex = useMemo(
+    () => lessons.findIndex((lesson) => String(lesson.id) === selectedLesson),
+    [lessons, selectedLesson]
+  );
+  const previousLesson = selectedLessonIndex > 0 ? lessons[selectedLessonIndex - 1] : null;
+  const nextLesson =
+    selectedLessonIndex >= 0 && selectedLessonIndex < lessons.length - 1
+      ? lessons[selectedLessonIndex + 1]
+      : null;
+  const lessonMaterialsUrl = useMemo(() => {
+    if (!selectedLessonData) return '';
+    const lesson = selectedLessonData as {
+      additional_materials?: string | null;
+      additional_materials_url?: string | null;
+      materials_url?: string | null;
+    };
+    return (
+      lesson.additional_materials ??
+      lesson.additional_materials_url ??
+      lesson.materials_url ??
+      ''
+    );
+  }, [selectedLessonData]);
   const rawVideoUrl =
     selectedLessonData?.video_url ||
     (selectedLessonData as { videoId?: string } | null)?.videoId ||
     '';
   const videoSource = resolveVideoSource(rawVideoUrl);
+
+  const handleLessonSelect = (lessonId: string) => {
+    hasUserSelected.current = true;
+    setSelectedLesson(lessonId);
+    if (courseId) {
+      navigate(`/courses/${courseId}/lessons/${lessonId}`);
+    }
+  };
+
+  const normalizedMaterialsLink = (lessonMaterialsUrl ?? '').trim();
+
+  const handlePurchase = async () => {
+    if (!courseId) return;
+    setIsPurchasing(true);
+    setPurchaseError(null);
+    try {
+      const purchase = await api.purchaseCourse(courseId);
+      if (purchase.payment_url) {
+        window.location.assign(purchase.payment_url);
+        return;
+      }
+      if (purchase.status === 'paid') {
+        await refreshMyCourses();
+        navigate(`/courses/${courseId}`, { replace: true });
+        return;
+      }
+      setPurchaseError('Не удалось получить ссылку на оплату.');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Ошибка при создании платежа.';
+      setPurchaseError(message);
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   if (!courseId || isError) {
     return <Navigate to="/courses" replace />;
@@ -223,7 +283,17 @@ const CourseDetail = () => {
   }
 
   const hasAccess = hasAccessToCourse({ id: course.id, is_free: course.is_free });
-  const isFree = course.is_free || course.price === null;
+  const isFree = course.is_free || course.price === null || course.price === undefined;
+  const priceValue = typeof course.price === 'number' ? course.price : null;
+  const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
+  const hasDiscount =
+    !isFree &&
+    priceValue !== null &&
+    discountValue !== null &&
+    discountValue > 0 &&
+    discountValue < priceValue;
+  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
+  const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
   const courseProgress = getCourseProgress(course.id);
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
@@ -256,7 +326,7 @@ const CourseDetail = () => {
                           videoSource.type === 'file' ? (
                             <video
                               src={videoSource.src}
-                              className="absolute inset-0 h-1024 w-720"
+                              className="absolute inset-0 h-full w-full"
                               controls
                               playsInline
                             />
@@ -264,7 +334,7 @@ const CourseDetail = () => {
                             <iframe
                               src={videoSource.src}
                               title={selectedLessonData.title}
-                              className="absolute inset-0 h-1024 w-720"
+                              className="absolute inset-0 h-full w-full"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
                             />
@@ -297,6 +367,52 @@ const CourseDetail = () => {
                         <CheckCircle2 className="mr-2 h-4 w-4" />
                         {isSelectedCompleted ? 'Просмотрено' : 'Отметить как просмотренный'}
                       </Button>
+                      <div className="mt-6 flex flex-col gap-4">
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!previousLesson}
+                            onClick={() =>
+                              previousLesson && handleLessonSelect(String(previousLesson.id))
+                            }
+                          >
+                            Предыдущий урок
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!nextLesson}
+                            onClick={() => nextLesson && handleLessonSelect(String(nextLesson.id))}
+                          >
+                            Следующий урок
+                          </Button>
+                        </div>
+                        <div className="rounded-lg border border-border bg-card p-4">
+                          <div className="mb-2 text-sm font-medium">
+                            Дополнительные материалы
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {normalizedMaterialsLink ? (
+                              <Button asChild variant="outline" size="sm">
+                                <a
+                                  href={normalizedMaterialsLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Открыть
+                                </a>
+                              </Button>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                Материалы недоступны
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -354,13 +470,7 @@ const CourseDetail = () => {
                             return (
                               <li key={lesson.id}>
                                 <button
-                                  onClick={() => {
-                                    hasUserSelected.current = true;
-                                    setSelectedLesson(lessonId);
-                                    if (courseId) {
-                                      navigate(`/courses/${courseId}/lessons/${lessonId}`);
-                                    }
-                                  }}
+                                  onClick={() => handleLessonSelect(lessonId)}
                                   className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-muted ${
                                     selectedLesson === lessonId ? 'bg-primary/10 text-primary' : ''
                                   }`}
@@ -450,9 +560,16 @@ const CourseDetail = () => {
                 <div className="mb-6 text-center">
                   {isFree ? (
                     <div className="text-3xl font-bold text-green-500">Бесплатно</div>
+                  ) : hasDiscount ? (
+                    <div className="flex items-baseline justify-center gap-3">
+                      <span className="text-lg line-through text-muted-foreground">
+                        {priceLabel} сом
+                      </span>
+                      <span className="text-3xl font-bold">{discountLabel} сом</span>
+                    </div>
                   ) : (
                     <div className="text-3xl font-bold">
-                      {course.price?.toLocaleString('ru-RU')} сом
+                      {priceLabel} сом
                     </div>
                   )}
                 </div>
@@ -471,9 +588,10 @@ const CourseDetail = () => {
                       variant="hero"
                       size="lg"
                       className="w-full"
-                      disabled
+                      onClick={handlePurchase}
+                      disabled={isPurchasing}
                     >
-                      Купить курс
+                      {isPurchasing ? 'Создаём платеж...' : 'Купить курс'}
                     </Button>
                   )
                 ) : (
@@ -498,6 +616,11 @@ const CourseDetail = () => {
                     <span>Сертификат по окончании</span>
                   </li>
                 </ul>
+                {purchaseError && (
+                  <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {purchaseError}
+                  </div>
+                )}
               </div>
             </div>
           </div>

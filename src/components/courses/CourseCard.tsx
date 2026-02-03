@@ -13,8 +13,16 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
   const isFree = course.is_free || course.price === null || course.price === undefined;
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
-  const priceLabel =
-    typeof course.price === 'number' ? course.price.toLocaleString('ru-RU') : course.price || '';
+  const priceValue = typeof course.price === 'number' ? course.price : null;
+  const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
+  const hasDiscount =
+    !isFree &&
+    priceValue !== null &&
+    discountValue !== null &&
+    discountValue > 0 &&
+    discountValue < priceValue;
+  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : course.price || '';
+  const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
 
   return (
     <Link
@@ -44,7 +52,16 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
               isFree ? 'bg-green-500 text-white hover:bg-green-500' : 'bg-background/90 text-foreground backdrop-blur-sm'
             }`}
           >
-            {isFree ? 'Бесплатно' : `${priceLabel} сом`}
+            {isFree ? (
+              'Бесплатно'
+            ) : hasDiscount ? (
+              <span className="flex items-baseline gap-2">
+                <span className="text-xs line-through opacity-70">{priceLabel}</span>
+                <span className="font-semibold">{discountLabel} сом</span>
+              </span>
+            ) : (
+              `${priceLabel} сом`
+            )}
           </Badge>
         </div>
 
@@ -79,7 +96,14 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
           {!isFree && (
             <div className="flex items-center gap-1">
               <Coins className="h-4 w-4" />
-              <span>{priceLabel}</span>
+              {hasDiscount ? (
+                <span className="flex items-baseline gap-2">
+                  <span className="line-through text-muted-foreground">{priceLabel}</span>
+                  <span className="font-medium text-foreground">{discountLabel}</span>
+                </span>
+              ) : (
+                <span>{priceLabel}</span>
+              )}
             </div>
           )}
         </div>
