@@ -29,18 +29,8 @@ export function LegalConsentText({ className }: LegalConsentTextProps) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Политикой конфиденциальности
-      </a>{' '}
-      и{' '}
-      <a
-        className={linkClassName}
-        href={LEGAL_DOCS.payments}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        условиями оплаты и возврата
+        Политикой конфиденциальности.
       </a>
-      .
     </p>
   );
 }
