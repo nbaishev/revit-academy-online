@@ -1,11 +1,7 @@
+import { LEGAL_DOCS } from '@/lib/legalDocs';
+
 type LegalConsentTextProps = {
   className?: string;
-};
-
-const LEGAL_DOCS = {
-  agreement: '/docs/user-agreement.pdf',
-  privacy: '/docs/privacy-policy.pdf',
-  payments: '/docs/payments-refunds.pdf',
 };
 
 const linkClassName = 'underline underline-offset-2 transition-colors hover:text-primary';

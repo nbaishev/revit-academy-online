@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+import { LEGAL_DOCS } from '@/lib/legalDocs';
 
 export function Footer() {
   return (
@@ -71,7 +72,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a
-                  href="/static/user_agreement.pdf"
+                  href={LEGAL_DOCS.agreement}
                   className="transition-colors hover:text-primary"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -81,7 +82,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="/static/privacy_policy.pdf"
+                  href={LEGAL_DOCS.privacy}
                   className="transition-colors hover:text-primary"
                   target="_blank"
                   rel="noopener noreferrer"

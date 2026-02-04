@@ -23,6 +23,7 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
     discountValue < priceValue;
   const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : course.price || '';
   const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
+  const isPublished = course.published ?? true;
 
   return (
     <Link
@@ -65,10 +66,15 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
           </Badge>
         </div>
 
-        <div className="absolute left-3 top-3">
+        <div className="absolute left-3 top-3 flex flex-col gap-2">
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
             {course.level}
           </Badge>
+          {!isPublished && (
+            <Badge className="bg-amber-500 text-white hover:bg-amber-500">
+              Скоро
+            </Badge>
+          )}
         </div>
       </div>
 

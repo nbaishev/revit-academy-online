@@ -62,6 +62,21 @@ const resolveVideoSource = (rawVideoUrl?: string): VideoSource | null => {
       }
     }
 
+    if (hostname === 'kinescope.io' || hostname === 'player.kinescope.io') {
+      if (url.pathname.startsWith('/embed/')) {
+        return { type: 'iframe', src: normalized };
+      }
+      const segments = url.pathname.split('/').filter(Boolean);
+      const kinescopeId =
+        segments[0] === 'video' || segments[0] === 'embed' ? segments[1] : segments[0];
+      if (kinescopeId) {
+        return {
+          type: 'iframe',
+          src: `https://kinescope.io/embed/${kinescopeId}${url.search}`,
+        };
+      }
+    }
+
     if (hostname === 'vimeo.com' || hostname === 'player.vimeo.com') {
       if (hostname === 'player.vimeo.com' && url.pathname.startsWith('/video/')) {
         return { type: 'iframe', src: normalized };
@@ -244,12 +259,13 @@ const CourseDetail = () => {
   const normalizedMaterialsLink = (lessonMaterialsUrl ?? '').trim();
 
   const handlePurchase = async () => {
-    if (!courseId) return;
+    if (!courseId || course?.published === false) return;
     setIsPurchasing(true);
     setPurchaseError(null);
     try {
       const purchase = await api.purchaseCourse(courseId);
       if (purchase.payment_url) {
+        sessionStorage.setItem('pendingPurchaseCourseId', courseId);
         window.location.assign(purchase.payment_url);
         return;
       }
@@ -284,6 +300,7 @@ const CourseDetail = () => {
 
   const hasAccess = hasAccessToCourse({ id: course.id, is_free: course.is_free });
   const isFree = course.is_free || course.price === null || course.price === undefined;
+  const isPublished = course.published ?? true;
   const priceValue = typeof course.price === 'number' ? course.price : null;
   const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
   const hasDiscount =
@@ -335,7 +352,7 @@ const CourseDetail = () => {
                               src={videoSource.src}
                               title={selectedLessonData.title}
                               className="absolute inset-0 h-full w-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture"
                               allowFullScreen
                             />
                           )
@@ -589,9 +606,9 @@ const CourseDetail = () => {
                       size="lg"
                       className="w-full"
                       onClick={handlePurchase}
-                      disabled={isPurchasing}
+                      disabled={isPurchasing || !isPublished}
                     >
-                      {isPurchasing ? 'Создаём платеж...' : 'Купить курс'}
+                      {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
                     </Button>
                   )
                 ) : (
@@ -609,7 +626,7 @@ const CourseDetail = () => {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>Доступ навсегда</span>
+                    <span>Реальный проект</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />

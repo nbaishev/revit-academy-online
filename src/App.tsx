@@ -10,6 +10,7 @@ import CourseDetail from "./pages/CourseDetail";
 import Dashboard from "./pages/Dashboard";
 import ModeratorPanel from "./pages/ModeratorPanel";
 import LoginConsent from "./pages/LoginConsent";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/login" element={<LoginConsent />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/moderator" element={<ModeratorPanel />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

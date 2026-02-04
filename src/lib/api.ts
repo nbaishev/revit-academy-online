@@ -10,6 +10,7 @@ type AdminCoursePayload = {
   description: string;
   full_description?: string;
   is_free: boolean;
+  published?: boolean;
   level: string;
   price?: number | null;
   discount_price?: number | null;
