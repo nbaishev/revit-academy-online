@@ -62,7 +62,7 @@ export function HeroSection() {
                 </Link>
               </Button>
               <Button asChild variant="outline-primary" size="xl">
-                <Link to="/courses/revit-basics">
+                <Link to="/courses/2">
                   <Play className="mr-2 h-5 w-5" />
                   Бесплатный курс
                 </Link>

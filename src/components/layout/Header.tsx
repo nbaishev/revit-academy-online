@@ -95,7 +95,7 @@ export function Header() {
                     Мои курсы
                   </Link>
                 </DropdownMenuItem>
-                {user.role === 'moderator' && (
+                {['moderator', 'admin'].includes(user.role) && (
                   <DropdownMenuItem asChild>
                     <Link to="/moderator" className="flex cursor-pointer items-center">
                       <User className="mr-2 h-4 w-4" />
@@ -167,7 +167,7 @@ export function Header() {
                     <LayoutDashboard className="h-4 w-4" />
                     Мои курсы
                   </Link>
-                  {user.role === 'moderator' && (
+                  {['moderator', 'admin'].includes(user.role) && (
                     <Link
                       to="/moderator"
                       onClick={() => setIsMobileMenuOpen(false)}

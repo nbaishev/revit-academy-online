@@ -10,6 +10,7 @@ const DOCS_BASE_URL = (() => {
 })();
 
 export const LEGAL_DOCS = {
-  agreement: `${DOCS_BASE_URL}/user_agreement.pdf`,
+  agreement: `${DOCS_BASE_URL}/oferta.pdf`,
   privacy: `${DOCS_BASE_URL}/privacy_policy.pdf`,
+  cooperation: `${DOCS_BASE_URL}/cooperation.pdf`,
 } as const;

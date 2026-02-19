@@ -39,7 +39,7 @@ export function CTASection() {
                 size="xl"
                 className="border-white/30 bg-transparent text-primary-foreground hover:bg-white/10"
               >
-                <Link to="/courses/revit-basics">Бесплатный курс</Link>
+                <Link to="/courses/2">Бесплатный курс</Link>
               </Button>
             </div>
           </div>

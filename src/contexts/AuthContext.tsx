@@ -125,9 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const getCourseProgress = (courseId: string) => {
-    const total = lessonTotals[courseId];
+    const registeredTotal = lessonTotals[courseId];
+    const fallbackTotal = myCourses.find((course) => course.id === courseId)?.lessons_count ?? 0;
+    const total = registeredTotal || fallbackTotal;
     if (!total || total === 0) return 0;
-    const completed = progress.filter((p) => p.course_id === courseId && p.is_completed).length;
+    const completedLessonIds = new Set(
+      progress
+        .filter((entry) => entry.course_id === courseId && (entry.is_completed || entry.completed_at))
+        .map((entry) => String(entry.lesson.id))
+    );
+    const completed = completedLessonIds.size;
     return Math.min(100, (completed / total) * 100);
   };
 
@@ -146,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registerCourseLessonCount,
       refreshMyCourses,
     }),
-    [user, isLoading, myCourses, progress]
+    [user, isLoading, myCourses, progress, lessonTotals]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

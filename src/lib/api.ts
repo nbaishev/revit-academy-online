@@ -1,4 +1,11 @@
-import { ApiCourse, ProgressEntry, User, Purchase, AuthTokens } from './types';
+import {
+  ApiCourse,
+  ProgressEntry,
+  User,
+  Purchase,
+  AuthTokens,
+  AdminCourseCompletionsResponse,
+} from './types';
 import { clearTokens, loadTokens as loadStoredTokens, saveTokens } from './token';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
@@ -246,5 +253,15 @@ export const api = {
   },
   async adminStats() {
     return request<import('./types').AdminStats>('/moderator/stats/', { auth: true });
+  },
+  async adminCourseCompletions(courseId: string, completedOnly = true) {
+    const query = new URLSearchParams({
+      course_id: courseId,
+      completed_only: completedOnly ? 'true' : 'false',
+    });
+    return request<AdminCourseCompletionsResponse>(
+      `/moderator/course-completions/?${query.toString()}`,
+      { auth: true }
+    );
   },
 };

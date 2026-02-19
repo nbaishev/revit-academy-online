@@ -347,8 +347,8 @@ const CourseDetail = () => {
                 {selectedLessonData ? (
                   <div className="flex h-full flex-col">
                     {/* Video Player */}
-                    <div className="px-4 pt-4">
-                      <div className="relative aspect-video w-full bg-foreground">
+                    <div className="px-4 pt-4 sm:px-6 lg:px-10 xl:px-16">
+                      <div className="relative mx-auto aspect-video w-full max-w-6xl bg-foreground">
                         {videoSource ? (
                           videoSource.type === 'file' ? (
                             <video

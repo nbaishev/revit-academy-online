@@ -53,16 +53,6 @@ export function Footer() {
                   Помощь
                 </a>
               </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-primary">
-                  Контакты
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition-colors hover:text-primary">
-                  FAQ
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -77,7 +67,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Пользовательское соглашение
+                  Договор оферты
                 </a>
               </li>
               <li>
@@ -90,6 +80,16 @@ export function Footer() {
                   Политика конфиденциальности
                 </a>
               </li>
+              <li>
+                <a
+                  href={LEGAL_DOCS.cooperation}
+                  className="transition-colors hover:text-primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Условия сотрудничества
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function Footer() {
         <div className="mt-12 border-t border-border pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2025 UstaBIM. Все права защищены.
+              © 2026 UstaBIM. Все права защищены.
             </p>
             <div className="flex gap-4">
               <a

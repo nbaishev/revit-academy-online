@@ -77,3 +77,26 @@ export interface AdminStats {
   total_purchases: number;
   most_popular_courses: { id: string; title: string; enrollments: number }[];
 }
+
+export interface AdminCourseCompletionEntry {
+  user_id: string;
+  name: string;
+  email: string;
+  completed_lessons: number;
+  total_lessons: number;
+  progress_percent: number;
+  is_completed: boolean;
+  last_completed_at?: string | null;
+}
+
+export interface AdminCourseCompletionsResponse {
+  course: {
+    id: string;
+    title: string;
+    total_lessons: number;
+  };
+  completed_only: boolean;
+  total_users: number;
+  completed_users: number;
+  results: AdminCourseCompletionEntry[];
+}
