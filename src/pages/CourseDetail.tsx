@@ -303,14 +303,24 @@ const CourseDetail = () => {
   const isPublished = course.published ?? true;
   const priceValue = typeof course.price === 'number' ? course.price : null;
   const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
+  const currentPriceValue =
+    typeof course.current_price === 'number'
+      ? course.current_price
+      : !isFree &&
+          priceValue !== null &&
+          discountValue !== null &&
+          discountValue > 0 &&
+          discountValue < priceValue
+        ? discountValue
+        : priceValue;
   const hasDiscount =
     !isFree &&
     priceValue !== null &&
-    discountValue !== null &&
-    discountValue > 0 &&
-    discountValue < priceValue;
+    currentPriceValue !== null &&
+    currentPriceValue < priceValue;
   const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
-  const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
+  const currentPriceLabel = currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
+  const effectivePriceLabel = currentPriceLabel || priceLabel;
   const courseProgress = getCourseProgress(course.id);
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
@@ -582,11 +592,11 @@ const CourseDetail = () => {
                       <span className="text-lg line-through text-muted-foreground">
                         {priceLabel} сом
                       </span>
-                      <span className="text-3xl font-bold">{discountLabel} сом</span>
+                      <span className="text-3xl font-bold">{currentPriceLabel} сом</span>
                     </div>
                   ) : (
                     <div className="text-3xl font-bold">
-                      {priceLabel} сом
+                      {effectivePriceLabel} сом
                     </div>
                   )}
                 </div>

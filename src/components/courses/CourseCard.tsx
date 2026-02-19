@@ -15,14 +15,25 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
   const modulesCount = course.modules_count ?? 0;
   const priceValue = typeof course.price === 'number' ? course.price : null;
   const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
+  const currentPriceValue =
+    typeof course.current_price === 'number'
+      ? course.current_price
+      : !isFree &&
+          priceValue !== null &&
+          discountValue !== null &&
+          discountValue > 0 &&
+          discountValue < priceValue
+        ? discountValue
+        : priceValue;
   const hasDiscount =
     !isFree &&
     priceValue !== null &&
-    discountValue !== null &&
-    discountValue > 0 &&
-    discountValue < priceValue;
-  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : course.price || '';
-  const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
+    currentPriceValue !== null &&
+    currentPriceValue < priceValue;
+  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
+  const currentPriceLabel =
+    currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
+  const effectivePriceLabel = currentPriceLabel || priceLabel;
   const isPublished = course.published ?? true;
 
   return (
@@ -58,10 +69,10 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
             ) : hasDiscount ? (
               <span className="flex items-baseline gap-2">
                 <span className="text-xs line-through opacity-70">{priceLabel}</span>
-                <span className="font-semibold">{discountLabel} сом</span>
+                <span className="font-semibold">{currentPriceLabel} сом</span>
               </span>
             ) : (
-              `${priceLabel} сом`
+              `${effectivePriceLabel} сом`
             )}
           </Badge>
         </div>
@@ -105,10 +116,10 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
               {hasDiscount ? (
                 <span className="flex items-baseline gap-2">
                   <span className="line-through text-muted-foreground">{priceLabel}</span>
-                  <span className="font-medium text-foreground">{discountLabel}</span>
+                  <span className="font-medium text-foreground">{currentPriceLabel}</span>
                 </span>
               ) : (
-                <span>{priceLabel}</span>
+                <span>{effectivePriceLabel}</span>
               )}
             </div>
           )}

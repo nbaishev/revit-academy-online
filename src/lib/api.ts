@@ -165,12 +165,13 @@ export const api = {
     if (params.is_featured !== undefined) query.set('is_featured', params.is_featured ? 'True' : 'False');
     query.set('page_size', '100');
     const res = await request<{ results?: ApiCourse[]; count?: number; next?: string; previous?: string }>(
-      `/courses/${query.toString() ? `?${query.toString()}` : ''}`
+      `/courses/${query.toString() ? `?${query.toString()}` : ''}`,
+      { auth: true }
     );
     return res.results ?? (res as unknown as ApiCourse[]);
   },
   async getCourse(id: string) {
-    return request<ApiCourse>(`/courses/${id}/`);
+    return request<ApiCourse>(`/courses/${id}/`, { auth: true });
   },
   async getCourseContent(id: string) {
     return request<ApiCourse>(`/courses/${id}/content/`, { auth: true });

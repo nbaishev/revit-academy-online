@@ -33,6 +33,7 @@ export interface ApiCourse {
   level: string;
   price?: number | null;
   discount_price?: number | null;
+  current_price?: number | null;
   preview_image?: string | null;
   background_video_url?: string | null;
   seo_title?: string | null;
