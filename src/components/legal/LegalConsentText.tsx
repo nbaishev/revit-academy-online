@@ -16,7 +16,7 @@ export function LegalConsentText({ className }: LegalConsentTextProps) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Пользовательским соглашением
+        Договором оферты
       </a>
       ,{' '}
       <a
