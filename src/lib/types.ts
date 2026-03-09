@@ -119,9 +119,13 @@ export interface EntranceQuizStatus {
   attempts_left: number;
   max_attempts: number;
   pass_score: number;
-  has_active_reward: boolean;
-  reward_expires_at?: string | null;
-  discounted_price: number;
+  has_passed: boolean;
+  can_claim: boolean;
+  already_claimed: boolean;
+  claimed_target_course?: {
+    id: string;
+    title: string;
+  } | null;
 }
 
 export interface EntranceQuizStartResponse {
@@ -137,12 +141,27 @@ export interface EntranceQuizReward {
 }
 
 export interface EntranceQuizSubmitResponse {
+  action?: 'submit';
   passed: boolean;
   score_percent: number;
   correct_count: number;
   total_questions: number;
   attempts_left: number;
-  reward?: EntranceQuizReward | null;
+}
+
+export interface EntranceQuizClaimResponse {
+  action?: 'claim';
+  claim_id: string;
+  target_course: {
+    id: string;
+    title: string;
+  };
+  reward: {
+    id: string;
+    percent_off: number;
+    expires_at: string;
+    is_active: boolean;
+  };
 }
 
 export interface FreeCourseBenefitStatus {

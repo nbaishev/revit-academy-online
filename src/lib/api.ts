@@ -7,6 +7,7 @@ import {
   AdminCourseCompletionsResponse,
   EntranceQuizStartResponse,
   EntranceQuizStatus,
+  EntranceQuizClaimResponse,
   EntranceQuizSubmitResponse,
   FreeCourseBenefitClaimResponse,
   FreeCourseBenefitStatus,
@@ -195,24 +196,31 @@ export const api = {
       body: JSON.stringify({ course_id: courseId }),
     });
   },
-  async getEntranceQuizStatus(courseId: string) {
-    return request<EntranceQuizStatus>(`/entrance-test/courses/${courseId}/status/`, { auth: true });
+  async getEntranceQuizStatus() {
+    return request<EntranceQuizStatus>('/entrance-test/', { auth: true });
   },
-  async startEntranceQuiz(courseId: string) {
-    return request<EntranceQuizStartResponse>(`/entrance-test/courses/${courseId}/start/`, {
+  async startEntranceQuiz() {
+    return request<EntranceQuizStartResponse>('/entrance-test/', {
       method: 'POST',
       auth: true,
-      body: JSON.stringify({}),
+      body: JSON.stringify({ action: 'start' }),
     });
   },
   async submitEntranceQuiz(
     attemptId: string,
     answers: { question_id: number; option_id: number }[]
   ) {
-    return request<EntranceQuizSubmitResponse>(`/entrance-test/attempts/${attemptId}/submit/`, {
+    return request<EntranceQuizSubmitResponse>('/entrance-test/', {
       method: 'POST',
       auth: true,
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ action: 'submit', attempt_id: attemptId, answers }),
+    });
+  },
+  async claimEntranceQuizCourse(targetCourseId: string) {
+    return request<EntranceQuizClaimResponse>('/entrance-test/', {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify({ action: 'claim', target_course_id: targetCourseId }),
     });
   },
   async getFreeCourseBenefitStatus(sourceCourseId: string) {

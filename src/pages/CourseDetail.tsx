@@ -140,8 +140,8 @@ const CourseDetail = () => {
   });
 
   const { data: entranceQuizStatus } = useQuery<EntranceQuizStatus | null>({
-    queryKey: ['entrance-quiz-status', courseId, user?.id],
-    queryFn: () => (courseId ? api.getEntranceQuizStatus(courseId) : Promise.resolve(null)),
+    queryKey: ['entrance-quiz-status', user?.id],
+    queryFn: () => api.getEntranceQuizStatus(),
     enabled: Boolean(
       courseId &&
         course &&
@@ -339,15 +339,6 @@ const CourseDetail = () => {
           discountValue < priceValue
         ? discountValue
         : priceValue;
-  const quizDiscountedPriceValue =
-    entranceQuizStatus && typeof entranceQuizStatus.discounted_price === 'number'
-      ? entranceQuizStatus.discounted_price
-      : null;
-  const hasQuizDiscountPreview =
-    !isFree &&
-    quizDiscountedPriceValue !== null &&
-    currentPriceValue !== null &&
-    quizDiscountedPriceValue < currentPriceValue;
   const hasDiscount =
     !isFree &&
     priceValue !== null &&
@@ -356,8 +347,6 @@ const CourseDetail = () => {
   const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
   const currentPriceLabel = currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
   const effectivePriceLabel = currentPriceLabel || priceLabel;
-  const quizDiscountedPriceLabel =
-    quizDiscountedPriceValue !== null ? quizDiscountedPriceValue.toLocaleString('ru-RU') : null;
   const courseProgress = getCourseProgress(course.id);
   const freeCourseBenefitConfigured = Boolean(
     freeCourseBenefitStatus?.is_configured && freeCourseBenefitStatus?.is_active
@@ -673,7 +662,7 @@ const CourseDetail = () => {
                   ) : (
                     <div className="space-y-3">
                       <Button asChild variant="outline" size="lg" className="w-full">
-                        <Link to={`/courses/${course.id}/entrance-test`}>
+                        <Link to="/entrance-test">
                           Пройти входной тест
                         </Link>
                       </Button>
@@ -702,14 +691,14 @@ const CourseDetail = () => {
                       Осталось попыток: <span className="font-medium">{entranceQuizStatus.attempts_left}</span> из{' '}
                       {entranceQuizStatus.max_attempts}
                     </p>
-                    {hasQuizDiscountPreview && quizDiscountedPriceLabel && (
+                    {entranceQuizStatus.can_claim && (
                       <p className="mt-1 text-emerald-600">
-                        Цена после успешного теста: {quizDiscountedPriceLabel} сом
+                        Тест пройден. Выберите курс на странице входного теста для скидки 50%.
                       </p>
                     )}
-                    {entranceQuizStatus.has_active_reward && entranceQuizStatus.reward_expires_at && (
+                    {entranceQuizStatus.already_claimed && entranceQuizStatus.claimed_target_course && (
                       <p className="mt-1 text-emerald-600">
-                        Скидка активна до {new Date(entranceQuizStatus.reward_expires_at).toLocaleString('ru-RU')}
+                        Скидка уже применена к курсу: {entranceQuizStatus.claimed_target_course.title}
                       </p>
                     )}
                   </div>

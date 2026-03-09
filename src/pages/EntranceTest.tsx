@@ -1,25 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Navigate, Link, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { api } from '@/lib/api';
-import {
-  EntranceQuizStartResponse,
-  EntranceQuizStatus,
-  EntranceQuizSubmitResponse,
-} from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
-
-const formatMoney = (value: number) => `${value.toLocaleString('ru-RU')} сом`;
+import { api } from '@/lib/api';
+import { ApiCourse, EntranceQuizStartResponse, EntranceQuizStatus, EntranceQuizSubmitResponse } from '@/lib/types';
 
 const EntranceTest = () => {
-  const { courseId } = useParams<{ courseId: string }>();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, myCourses } = useAuth();
 
   const [attempt, setAttempt] = useState<EntranceQuizStartResponse | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
@@ -28,29 +21,32 @@ const EntranceTest = () => {
 
   const from = `${location.pathname}${location.search}${location.hash}`;
 
-  const { data: course, isLoading: isCourseLoading } = useQuery({
-    queryKey: ['course', courseId],
-    queryFn: () => (courseId ? api.getCourse(courseId) : Promise.resolve(null)),
-    enabled: Boolean(courseId && user),
-  });
-
   const {
     data: status,
-    isLoading: isStatusLoading,
-    isError: isStatusError,
+    isLoading: statusLoading,
+    isError: statusIsError,
     error: statusError,
-  } = useQuery<EntranceQuizStatus | null>({
-    queryKey: ['entrance-quiz-status', courseId, user?.id],
-    queryFn: () => (courseId ? api.getEntranceQuizStatus(courseId) : Promise.resolve(null)),
-    enabled: Boolean(courseId && user),
+  } = useQuery<EntranceQuizStatus>({
+    queryKey: ['entrance-quiz-status', user?.id],
+    queryFn: () => api.getEntranceQuizStatus(),
+    enabled: Boolean(user),
     retry: false,
   });
 
+  const { data: paidCourses = [], isLoading: paidCoursesLoading } = useQuery<ApiCourse[]>({
+    queryKey: ['entrance-quiz-target-courses', user?.id],
+    queryFn: () => api.listCourses({ price: 'paid' }),
+    enabled: Boolean(user && (status?.can_claim || status?.already_claimed)),
+  });
+
+  const ownedCourseIds = useMemo(() => new Set(myCourses.map((course) => course.id)), [myCourses]);
+  const availableTargetCourses = useMemo(
+    () => paidCourses.filter((course) => !ownedCourseIds.has(course.id)),
+    [paidCourses, ownedCourseIds]
+  );
+
   const startMutation = useMutation({
-    mutationFn: () => {
-      if (!courseId) throw new Error('courseId is required');
-      return api.startEntranceQuiz(courseId);
-    },
+    mutationFn: () => api.startEntranceQuiz(),
     onSuccess: (data) => {
       setAttempt(data);
       setSelectedAnswers({});
@@ -73,15 +69,27 @@ const EntranceTest = () => {
     },
     onSuccess: async (data) => {
       setSubmitResult(data);
+      setAttempt(null);
+      setSelectedAnswers({});
+      setLocalError(null);
+      await queryClient.invalidateQueries({ queryKey: ['entrance-quiz-status', user?.id] });
+    },
+    onError: (error) => {
+      setLocalError(error instanceof Error ? error.message : 'Не удалось отправить ответы.');
+    },
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: (targetCourseId: string) => api.claimEntranceQuizCourse(targetCourseId),
+    onSuccess: async () => {
       setLocalError(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['entrance-quiz-status', courseId, user?.id] }),
-        queryClient.invalidateQueries({ queryKey: ['course', courseId] }),
+        queryClient.invalidateQueries({ queryKey: ['entrance-quiz-status', user?.id] }),
         queryClient.invalidateQueries({ queryKey: ['courses'] }),
       ]);
     },
     onError: (error) => {
-      setLocalError(error instanceof Error ? error.message : 'Не удалось отправить ответы.');
+      setLocalError(error instanceof Error ? error.message : 'Не удалось применить скидку к курсу.');
     },
   });
 
@@ -89,20 +97,6 @@ const EntranceTest = () => {
     if (!attempt) return false;
     return attempt.questions.every((question) => Boolean(selectedAnswers[question.id]));
   }, [attempt, selectedAnswers]);
-
-  const handleSelectOption = (questionId: number, optionId: number) => {
-    setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-    setLocalError(null);
-  };
-
-  const handleSubmit = () => {
-    if (!attempt) return;
-    if (!allQuestionsAnswered) {
-      setLocalError('Ответьте на все вопросы перед отправкой.');
-      return;
-    }
-    submitMutation.mutate();
-  };
 
   if (authLoading) {
     return (
@@ -118,49 +112,48 @@ const EntranceTest = () => {
     return <Navigate to="/login" state={{ from }} replace />;
   }
 
-  if (!courseId) {
-    return <Navigate to="/courses" replace />;
-  }
-
   return (
     <Layout>
-      <section className="container mx-auto max-w-4xl px-4 py-10">
+      <section className="container mx-auto max-w-5xl px-4 py-10">
         <div className="mb-6 flex flex-col gap-2">
-          <Link to={`/courses/${courseId}`} className="text-sm text-muted-foreground hover:text-foreground">
-            ← Вернуться к курсу
+          <Link to="/courses" className="text-sm text-muted-foreground hover:text-foreground">
+            ← Вернуться к курсам
           </Link>
           <h1 className="text-3xl font-semibold">Входной тест</h1>
           <p className="text-muted-foreground">
-            Пройдите тест и получите скидку 50% на курс.
+            Пройдите тест, затем выберите курс для скидки 50%.
           </p>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>{course?.title || 'Курс'}</CardTitle>
+            <CardTitle>Статус тестирования</CardTitle>
             <CardDescription>
-              Порог прохождения: {status?.pass_score ?? '—'}% · Осталось попыток: {status?.attempts_left ?? '—'}
+              Порог: {status?.pass_score ?? '—'}% · Осталось попыток: {status?.attempts_left ?? '—'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {(isCourseLoading || isStatusLoading) && <p className="text-muted-foreground">Загружаем данные теста...</p>}
-            {!isStatusLoading && status && (
+          <CardContent className="space-y-2 text-sm">
+            {statusLoading && <p className="text-muted-foreground">Загружаем статус...</p>}
+            {status && (
               <>
                 <p>
-                  Цена после успешного теста: <span className="font-medium">{formatMoney(status.discounted_price)}</span>
+                  Попыток использовано: <span className="font-medium">{status.attempts_used}</span> из {status.max_attempts}
                 </p>
-                {status.has_active_reward && status.reward_expires_at && (
+                <p>
+                  Тест пройден: <span className="font-medium">{status.has_passed ? 'Да' : 'Нет'}</span>
+                </p>
+                {status.already_claimed && status.claimed_target_course && (
                   <p className="text-emerald-600">
-                    Скидка уже активна до {new Date(status.reward_expires_at).toLocaleString('ru-RU')}.
+                    Скидка 50% уже применена к курсу: {status.claimed_target_course.title}
                   </p>
                 )}
               </>
             )}
-            {isStatusError && (
+            {statusIsError && (
               <Alert variant="destructive">
-                <AlertTitle>Тест недоступен</AlertTitle>
+                <AlertTitle>Не удалось получить статус</AlertTitle>
                 <AlertDescription>
-                  {statusError instanceof Error ? statusError.message : 'Не удалось получить статус теста.'}
+                  {statusError instanceof Error ? statusError.message : 'Ошибка загрузки статуса теста.'}
                 </AlertDescription>
               </Alert>
             )}
@@ -180,16 +173,7 @@ const EntranceTest = () => {
           </Button>
         )}
 
-        {!attempt && !submitResult && status && !status.can_start && !status.has_active_reward && (
-          <Alert>
-            <AlertTitle>Лимит попыток исчерпан</AlertTitle>
-            <AlertDescription>
-              В этой версии новые попытки может открыть только администратор.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {attempt && !submitResult && (
+        {attempt && (
           <div className="space-y-6">
             {attempt.questions.map((question, index) => (
               <Card key={question.id}>
@@ -205,7 +189,10 @@ const EntranceTest = () => {
                       <button
                         key={option.id}
                         type="button"
-                        onClick={() => handleSelectOption(question.id, option.id)}
+                        onClick={() => {
+                          setSelectedAnswers((prev) => ({ ...prev, [question.id]: option.id }));
+                          setLocalError(null);
+                        }}
                         className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                           isSelected
                             ? 'border-primary bg-primary/10 text-primary'
@@ -221,7 +208,13 @@ const EntranceTest = () => {
             ))}
 
             <Button
-              onClick={handleSubmit}
+              onClick={() => {
+                if (!allQuestionsAnswered) {
+                  setLocalError('Ответьте на все вопросы перед отправкой.');
+                  return;
+                }
+                submitMutation.mutate();
+              }}
               disabled={submitMutation.isPending || !allQuestionsAnswered}
               className="w-full"
             >
@@ -230,55 +223,74 @@ const EntranceTest = () => {
           </div>
         )}
 
-        {submitResult && (
-          <Card>
+        {!attempt && submitResult && (
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle>
-                {submitResult.passed ? 'Тест пройден' : 'Тест не пройден'}
-              </CardTitle>
+              <CardTitle>{submitResult.passed ? 'Тест пройден' : 'Тест не пройден'}</CardTitle>
               <CardDescription>
                 Результат: {submitResult.score_percent}% ({submitResult.correct_count}/{submitResult.total_questions})
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {submitResult.passed ? (
+            <CardContent>
+              {!submitResult.passed ? (
                 <Alert>
-                  <AlertTitle>Скидка активирована</AlertTitle>
-                  <AlertDescription>
-                    {submitResult.reward?.percent_off ?? 50}% на курс до{' '}
-                    {submitResult.reward?.expires_at
-                      ? new Date(submitResult.reward.expires_at).toLocaleString('ru-RU')
-                      : 'окончания срока действия'}.
-                  </AlertDescription>
+                  <AlertTitle>Можно попробовать снова</AlertTitle>
+                  <AlertDescription>Осталось попыток: {submitResult.attempts_left}.</AlertDescription>
                 </Alert>
               ) : (
                 <Alert>
-                  <AlertTitle>Можно попробовать еще</AlertTitle>
-                  <AlertDescription>
-                    Осталось попыток: {submitResult.attempts_left}.
-                  </AlertDescription>
+                  <AlertTitle>Отлично</AlertTitle>
+                  <AlertDescription>Теперь выберите курс ниже для применения скидки 50%.</AlertDescription>
                 </Alert>
               )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button asChild>
-                  <Link to={`/courses/${courseId}`}>Вернуться к курсу</Link>
-                </Button>
-                {!submitResult.passed && submitResult.attempts_left > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setAttempt(null);
-                      setSubmitResult(null);
-                      setSelectedAnswers({});
-                    }}
-                  >
-                    Начать новую попытку
-                  </Button>
-                )}
-              </div>
             </CardContent>
           </Card>
+        )}
+
+        {status?.can_claim && (
+          <div className="mt-8 space-y-4">
+            <h2 className="text-xl font-semibold">Выберите курс для скидки 50%</h2>
+            {paidCoursesLoading ? (
+              <p className="text-muted-foreground">Загружаем курсы...</p>
+            ) : availableTargetCourses.length === 0 ? (
+              <Alert>
+                <AlertTitle>Нет доступных курсов</AlertTitle>
+                <AlertDescription>Подходящие платные курсы не найдены.</AlertDescription>
+              </Alert>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {availableTargetCourses.map((course) => {
+                  const displayedPrice =
+                    typeof course.current_price === 'number'
+                      ? course.current_price
+                      : typeof course.price === 'number'
+                        ? course.price
+                        : 0;
+                  return (
+                    <Card key={course.id}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{course.title}</CardTitle>
+                        <CardDescription>{course.level}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
+                        <p className="text-sm">
+                          Текущая цена: <span className="font-medium">{displayedPrice.toLocaleString('ru-RU')} сом</span>
+                        </p>
+                        <Button
+                          className="w-full"
+                          disabled={claimMutation.isPending}
+                          onClick={() => claimMutation.mutate(course.id)}
+                        >
+                          {claimMutation.isPending ? 'Применяем скидку...' : 'Выбрать курс'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </section>
     </Layout>
