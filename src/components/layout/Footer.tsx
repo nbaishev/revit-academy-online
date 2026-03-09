@@ -49,7 +49,7 @@ export function Footer() {
             <h3 className="mb-4 font-semibold">Поддержка</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="transition-colors hover:text-primary">
+                <a href="https://t.me/+JKVWYQV6MDkwZWIy" className="transition-colors hover:text-primary">
                   Помощь
                 </a>
               </li>

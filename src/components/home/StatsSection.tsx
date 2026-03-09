@@ -1,7 +1,7 @@
 const stats = [
-  { value: '20+', label: 'Студентов' },
+  { value: '70+', label: 'Студентов' },
   { value: '6', label: 'Курсов' },
-  { value: '70+', label: 'Видеоуроков' },
+  { value: '310+', label: 'Видеоуроков' },
   { value: '4.8', label: 'Средний рейтинг' },
 ];
 

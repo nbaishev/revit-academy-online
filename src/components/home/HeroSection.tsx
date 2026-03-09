@@ -26,16 +26,16 @@ export function HeroSection() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
               </span>
-              Более 20 студентов уже обучаются
+              Более 70 студентов уже обучаются
             </div>
 
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-              Освойте{' '}
+              Онлайн{' '}
               <span className="inline-block rounded-lg bg-blue-600 px-3 py-1 font-bold text-white shadow-lg">
-                Autodesk Revit
+                BIM платформа
               </span>
               <br />
-              с нуля до профи
+              нового поколения
             </h1>
 
             <p className="mb-8 max-w-lg text-lg text-muted-foreground md:text-xl">
