@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
-import { ApiCourse } from '@/lib/types';
+import { ApiCourse, EntranceQuizStatus, FreeCourseBenefitStatus } from '@/lib/types';
 import { pluralizeRu } from '@/lib/utils';
 
 type VideoSource = { type: 'iframe'; src: string } | { type: 'file'; src: string };
@@ -137,6 +137,32 @@ const CourseDetail = () => {
         course &&
         (course.is_free || (user && hasAccessToCourse({ id: course.id, is_free: course.is_free })))
     ),
+  });
+
+  const { data: entranceQuizStatus } = useQuery<EntranceQuizStatus | null>({
+    queryKey: ['entrance-quiz-status', courseId, user?.id],
+    queryFn: () => (courseId ? api.getEntranceQuizStatus(courseId) : Promise.resolve(null)),
+    enabled: Boolean(
+      courseId &&
+        course &&
+        user &&
+        !course.is_free &&
+        !hasAccessToCourse({ id: course.id, is_free: course.is_free })
+    ),
+    retry: false,
+  });
+
+  const { data: freeCourseBenefitStatus } = useQuery<FreeCourseBenefitStatus | null>({
+    queryKey: ['free-course-benefit-status', courseId, user?.id],
+    queryFn: () => (courseId ? api.getFreeCourseBenefitStatus(courseId) : Promise.resolve(null)),
+    enabled: Boolean(
+      courseId &&
+        course &&
+        user &&
+        course.is_free &&
+        hasAccessToCourse({ id: course.id, is_free: course.is_free })
+    ),
+    retry: false,
   });
 
   const completedLessonIds = useMemo(() => {
@@ -313,6 +339,15 @@ const CourseDetail = () => {
           discountValue < priceValue
         ? discountValue
         : priceValue;
+  const quizDiscountedPriceValue =
+    entranceQuizStatus && typeof entranceQuizStatus.discounted_price === 'number'
+      ? entranceQuizStatus.discounted_price
+      : null;
+  const hasQuizDiscountPreview =
+    !isFree &&
+    quizDiscountedPriceValue !== null &&
+    currentPriceValue !== null &&
+    quizDiscountedPriceValue < currentPriceValue;
   const hasDiscount =
     !isFree &&
     priceValue !== null &&
@@ -321,7 +356,15 @@ const CourseDetail = () => {
   const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
   const currentPriceLabel = currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
   const effectivePriceLabel = currentPriceLabel || priceLabel;
+  const quizDiscountedPriceLabel =
+    quizDiscountedPriceValue !== null ? quizDiscountedPriceValue.toLocaleString('ru-RU') : null;
   const courseProgress = getCourseProgress(course.id);
+  const freeCourseBenefitConfigured = Boolean(
+    freeCourseBenefitStatus?.is_configured && freeCourseBenefitStatus?.is_active
+  );
+  const canOpenFreeCourseBenefit = Boolean(
+    course.is_free && courseProgress >= 100 && freeCourseBenefitConfigured
+  );
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
   const isSelectedCompleted = Boolean(selectedLesson && completedLessonIds.has(selectedLesson));
@@ -476,6 +519,23 @@ const CourseDetail = () => {
                   </div>
                   <Progress value={courseProgress} className="h-2" />
                 </div>
+                {canOpenFreeCourseBenefit && (
+                  <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+                    <p className="text-sm text-emerald-700">
+                      Курс завершен на 100%. Выберите платный курс и получите скидку 10%.
+                    </p>
+                    <Button asChild size="sm" className="mt-3 w-full">
+                      <Link to={`/courses/${course.id}/free-course-benefit`}>
+                        Выбрать курс для скидки
+                      </Link>
+                    </Button>
+                    {freeCourseBenefitStatus?.already_claimed && freeCourseBenefitStatus.claimed_target_course && (
+                      <p className="mt-2 text-xs text-emerald-700">
+                        Скидка уже применена к: {freeCourseBenefitStatus.claimed_target_course.title}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="h-[calc(100%-140px)] overflow-auto">
@@ -611,21 +671,47 @@ const CourseDetail = () => {
                       Начать обучение
                     </Button>
                   ) : (
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      className="w-full"
-                      onClick={handlePurchase}
-                      disabled={isPurchasing || !isPublished}
-                    >
-                      {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
-                    </Button>
+                    <div className="space-y-3">
+                      <Button asChild variant="outline" size="lg" className="w-full">
+                        <Link to={`/courses/${course.id}/entrance-test`}>
+                          Пройти входной тест
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        className="w-full"
+                        onClick={handlePurchase}
+                        disabled={isPurchasing || !isPublished}
+                      >
+                        {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
+                      </Button>
+                    </div>
                   )
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Button onClick={handleLoginClick} variant="hero" size="lg" className="w-full">
                       Войти, чтобы начать
                     </Button>
+                  </div>
+                )}
+
+                {user && !hasAccess && !isFree && entranceQuizStatus && (
+                  <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                    <p>
+                      Осталось попыток: <span className="font-medium">{entranceQuizStatus.attempts_left}</span> из{' '}
+                      {entranceQuizStatus.max_attempts}
+                    </p>
+                    {hasQuizDiscountPreview && quizDiscountedPriceLabel && (
+                      <p className="mt-1 text-emerald-600">
+                        Цена после успешного теста: {quizDiscountedPriceLabel} сом
+                      </p>
+                    )}
+                    {entranceQuizStatus.has_active_reward && entranceQuizStatus.reward_expires_at && (
+                      <p className="mt-1 text-emerald-600">
+                        Скидка активна до {new Date(entranceQuizStatus.reward_expires_at).toLocaleString('ru-RU')}
+                      </p>
+                    )}
                   </div>
                 )}
 

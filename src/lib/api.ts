@@ -5,6 +5,11 @@ import {
   Purchase,
   AuthTokens,
   AdminCourseCompletionsResponse,
+  EntranceQuizStartResponse,
+  EntranceQuizStatus,
+  EntranceQuizSubmitResponse,
+  FreeCourseBenefitClaimResponse,
+  FreeCourseBenefitStatus,
 } from './types';
 import { clearTokens, loadTokens as loadStoredTokens, saveTokens } from './token';
 
@@ -189,6 +194,42 @@ export const api = {
       auth: true,
       body: JSON.stringify({ course_id: courseId }),
     });
+  },
+  async getEntranceQuizStatus(courseId: string) {
+    return request<EntranceQuizStatus>(`/entrance-test/courses/${courseId}/status/`, { auth: true });
+  },
+  async startEntranceQuiz(courseId: string) {
+    return request<EntranceQuizStartResponse>(`/entrance-test/courses/${courseId}/start/`, {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify({}),
+    });
+  },
+  async submitEntranceQuiz(
+    attemptId: string,
+    answers: { question_id: number; option_id: number }[]
+  ) {
+    return request<EntranceQuizSubmitResponse>(`/entrance-test/attempts/${attemptId}/submit/`, {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify({ answers }),
+    });
+  },
+  async getFreeCourseBenefitStatus(sourceCourseId: string) {
+    return request<FreeCourseBenefitStatus>(
+      `/free-course-benefits/courses/${sourceCourseId}/status/`,
+      { auth: true }
+    );
+  },
+  async claimFreeCourseBenefit(sourceCourseId: string, targetCourseId: string) {
+    return request<FreeCourseBenefitClaimResponse>(
+      `/free-course-benefits/courses/${sourceCourseId}/claim/`,
+      {
+        method: 'POST',
+        auth: true,
+        body: JSON.stringify({ target_course_id: targetCourseId }),
+      }
+    );
   },
   async adminListCourses() {
     const res = await request<{ results?: ApiCourse[]; count?: number; next?: string; previous?: string }>(

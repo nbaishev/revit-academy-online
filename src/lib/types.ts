@@ -100,3 +100,80 @@ export interface AdminCourseCompletionsResponse {
   completed_users: number;
   results: AdminCourseCompletionEntry[];
 }
+
+export interface EntranceQuizQuestionOption {
+  id: number;
+  text: string;
+  order: number;
+}
+
+export interface EntranceQuizQuestion {
+  id: number;
+  text: string;
+  options: EntranceQuizQuestionOption[];
+}
+
+export interface EntranceQuizStatus {
+  can_start: boolean;
+  attempts_used: number;
+  attempts_left: number;
+  max_attempts: number;
+  pass_score: number;
+  has_active_reward: boolean;
+  reward_expires_at?: string | null;
+  discounted_price: number;
+}
+
+export interface EntranceQuizStartResponse {
+  attempt_id: string;
+  attempt_no: number;
+  questions: EntranceQuizQuestion[];
+}
+
+export interface EntranceQuizReward {
+  percent_off: number;
+  expires_at: string;
+  is_active: boolean;
+}
+
+export interface EntranceQuizSubmitResponse {
+  passed: boolean;
+  score_percent: number;
+  correct_count: number;
+  total_questions: number;
+  attempts_left: number;
+  reward?: EntranceQuizReward | null;
+}
+
+export interface FreeCourseBenefitStatus {
+  is_configured: boolean;
+  is_active: boolean;
+  percent_off?: number | null;
+  completion_percent: number;
+  completed_lessons: number;
+  total_lessons: number;
+  is_completed: boolean;
+  already_claimed: boolean;
+  can_claim: boolean;
+  claimed_target_course?: {
+    id: string;
+    title: string;
+  } | null;
+  reward_expires_at?: string | null;
+}
+
+export interface FreeCourseBenefitClaimResponse {
+  claim_id: string;
+  source_course_id: string;
+  target_course: {
+    id: string;
+    title: string;
+  };
+  percent_off: number;
+  reward: {
+    id: string;
+    percent_off: number;
+    expires_at: string;
+    is_active: boolean;
+  };
+}
