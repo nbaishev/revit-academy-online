@@ -61,12 +61,19 @@ export function HeroSection() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline-primary" size="xl">
-                <Link to="/courses/2">
-                  <Play className="mr-2 h-5 w-5" />
-                  Бесплатный курс
-                </Link>
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline-primary" size="xl">
+                  <Link to="/courses/2">
+                    <Play className="mr-2 h-5 w-5" />
+                    Бесплатный курс
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="xl">
+                  <Link to="/entrance-test">
+                    Пройти тест
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 
