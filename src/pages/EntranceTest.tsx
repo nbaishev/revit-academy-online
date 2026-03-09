@@ -129,7 +129,7 @@ const EntranceTest = () => {
           <CardHeader>
             <CardTitle>Статус тестирования</CardTitle>
             <CardDescription>
-              Порог: {status?.pass_score ?? '—'}% · Осталось попыток: {status?.attempts_left ?? '—'}
+              Осталось попыток: {status?.attempts_left ?? '—'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
@@ -290,6 +290,16 @@ const EntranceTest = () => {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {status?.already_claimed && status.claimed_target_course && (
+          <div className="mt-8">
+            <Button asChild size="lg">
+              <Link to={`/courses/${status.claimed_target_course.id}`}>
+                Перейти к выбранному курсу
+              </Link>
+            </Button>
           </div>
         )}
       </section>

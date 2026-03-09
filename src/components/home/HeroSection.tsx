@@ -68,7 +68,12 @@ export function HeroSection() {
                     Бесплатный курс
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="xl">
+                <Button
+                  asChild
+                  variant="default"
+                  size="xl"
+                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                >
                   <Link to="/entrance-test">
                     Пройти тест
                   </Link>

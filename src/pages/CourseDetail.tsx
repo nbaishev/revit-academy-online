@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
-import { ApiCourse, EntranceQuizStatus, FreeCourseBenefitStatus } from '@/lib/types';
+import { ApiCourse, FreeCourseBenefitStatus } from '@/lib/types';
 import { pluralizeRu } from '@/lib/utils';
 
 type VideoSource = { type: 'iframe'; src: string } | { type: 'file'; src: string };
@@ -137,19 +137,6 @@ const CourseDetail = () => {
         course &&
         (course.is_free || (user && hasAccessToCourse({ id: course.id, is_free: course.is_free })))
     ),
-  });
-
-  const { data: entranceQuizStatus } = useQuery<EntranceQuizStatus | null>({
-    queryKey: ['entrance-quiz-status', user?.id],
-    queryFn: () => api.getEntranceQuizStatus(),
-    enabled: Boolean(
-      courseId &&
-        course &&
-        user &&
-        !course.is_free &&
-        !hasAccessToCourse({ id: course.id, is_free: course.is_free })
-    ),
-    retry: false,
   });
 
   const { data: freeCourseBenefitStatus } = useQuery<FreeCourseBenefitStatus | null>({
@@ -660,47 +647,21 @@ const CourseDetail = () => {
                       Начать обучение
                     </Button>
                   ) : (
-                    <div className="space-y-3">
-                      <Button asChild variant="outline" size="lg" className="w-full">
-                        <Link to="/entrance-test">
-                          Пройти входной тест
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="hero"
-                        size="lg"
-                        className="w-full"
-                        onClick={handlePurchase}
-                        disabled={isPurchasing || !isPublished}
-                      >
-                        {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="hero"
+                      size="lg"
+                      className="w-full"
+                      onClick={handlePurchase}
+                      disabled={isPurchasing || !isPublished}
+                    >
+                      {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
+                    </Button>
                   )
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Button onClick={handleLoginClick} variant="hero" size="lg" className="w-full">
                       Войти, чтобы начать
                     </Button>
-                  </div>
-                )}
-
-                {user && !hasAccess && !isFree && entranceQuizStatus && (
-                  <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                    <p>
-                      Осталось попыток: <span className="font-medium">{entranceQuizStatus.attempts_left}</span> из{' '}
-                      {entranceQuizStatus.max_attempts}
-                    </p>
-                    {entranceQuizStatus.can_claim && (
-                      <p className="mt-1 text-emerald-600">
-                        Тест пройден. Выберите курс на странице входного теста для скидки 50%.
-                      </p>
-                    )}
-                    {entranceQuizStatus.already_claimed && entranceQuizStatus.claimed_target_course && (
-                      <p className="mt-1 text-emerald-600">
-                        Скидка уже применена к курсу: {entranceQuizStatus.claimed_target_course.title}
-                      </p>
-                    )}
                   </div>
                 )}
 
