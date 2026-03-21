@@ -14,6 +14,7 @@ import LoginConsent from "./pages/LoginConsent";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import EntranceTest from "./pages/EntranceTest";
 import FreeCourseBenefit from "./pages/FreeCourseBenefit";
+import Collaboration from "./pages/Collaboration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
