@@ -44,6 +44,7 @@ const App = () => (
             <Route path="/courses/:courseId" element={<CourseDetail />} />
             <Route path="/entrance-test" element={<EntranceTest />} />
             <Route path="/courses/:courseId/free-course-benefit" element={<FreeCourseBenefit />} />
+            <Route path="/collaboration" element={<Collaboration />} />
             <Route path="/login" element={<LoginConsent />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/moderator" element={<ModeratorPanel />} />
