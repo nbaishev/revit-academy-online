@@ -21,6 +21,7 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Главная' },
     { href: '/courses', label: 'Курсы' },
+    { href: '/collaboration', label: 'Совместная работа' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

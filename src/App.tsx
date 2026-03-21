@@ -14,6 +14,7 @@ import LoginConsent from "./pages/LoginConsent";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import EntranceTest from "./pages/EntranceTest";
 import FreeCourseBenefit from "./pages/FreeCourseBenefit";
+import Collaboration from "./pages/Collaboration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/courses/:courseId" element={<CourseDetail />} />
             <Route path="/entrance-test" element={<EntranceTest />} />
             <Route path="/courses/:courseId/free-course-benefit" element={<FreeCourseBenefit />} />
+            <Route path="/collaboration" element={<Collaboration />} />
             <Route path="/login" element={<LoginConsent />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/moderator" element={<ModeratorPanel />} />
