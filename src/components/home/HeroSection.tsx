@@ -3,11 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Play, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export function HeroSection() {
-  const benefits = [
-    'Структурированные видеоуроки',
-    'От основ до продвинутого уровня',
-    'Практические проекты',
-  ];
 
   return (
     <section className="relative overflow-hidden gradient-hero">
@@ -17,7 +12,7 @@ export function HeroSection() {
         <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <div className="container relative mx-auto px-4 py-20 md:py-32">
+      <div className="container relative mx-auto px-4 pb-20 pt-5 md:pb-32 md:pt-5">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           {/* Content */}
           <div className="animate-slide-up">
@@ -42,16 +37,6 @@ export function HeroSection() {
               Профессиональные курсы по BIM-проектированию. 
               Учитесь в удобном темпе с практическими заданиями и поддержкой экспертов.
             </p>
-
-            {/* Benefits */}
-            <ul className="mb-8 space-y-3">
-              {benefits.map((benefit, index) => (
-                <li key={index} className="flex items-center gap-3 text-muted-foreground">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
-                  <span>{benefit}</span>
-                </li>
-              ))}
-            </ul>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">

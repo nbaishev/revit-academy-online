@@ -17,7 +17,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
-const TELEGRAM_LINK = 'https://t.me/@FreedomBIM';
+const TELEGRAM_LINK = 'https://t.me/FreedomBIM';
 
 const revitPlans = [
   {
@@ -208,7 +208,7 @@ export default function Collaboration() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 py-20 lg:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 pb-20 pt-10 lg:pb-28 lg:pt-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.08),transparent_60%)]" />
         <div className="container relative mx-auto px-4">
           <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-16">
