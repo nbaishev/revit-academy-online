@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Instagram, Youtube } from 'lucide-react';
 import { LEGAL_DOCS } from '@/lib/legalDocs';
 
 export function Footer() {
@@ -18,7 +18,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
-              Образовательная платформа для изучения Autodesk Revit и BIM-проектирования
+              Образовательная платформа для изучения индустрии BIM-проектирования
             </p>
           </div>
 
@@ -56,6 +56,26 @@ export function Footer() {
               <li>
                 <a href="https://www.instagram.com/ustabim.online/" className="transition-colors hover:text-primary">
                   Instagram
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/ustaBIM_Kg" className="transition-colors hover:text-primary">
+                  Кыргызстан
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/ustaBIM_Ru" className="transition-colors hover:text-primary">
+                  Россия
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/ustaBIM_Kz" className="transition-colors hover:text-primary">
+                  Казахстан
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/ustaBIM_Uz" className="transition-colors hover:text-primary">
+                  Узбекистан
                 </a>
               </li>
             </ul>
@@ -104,6 +124,26 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © 2026 UstaBIM. Все права защищены.
             </p>
+            <div className="flex items-center gap-3 self-end">
+              <a
+                href="https://www.instagram.com/ustabim.online/"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram UstaBIM"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a
+                href="https://youtube.com/@usta_international"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube UstaBIM"
+              >
+                <Youtube className="h-5 w-5" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

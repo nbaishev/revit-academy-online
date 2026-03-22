@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Layout } from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
 import { LegalConsentText } from '@/components/legal/LegalConsentText';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -36,14 +36,13 @@ const LoginConsent = () => {
           <div className="mt-6 rounded-xl border border-border/60 bg-muted/30 p-4">
             <LegalConsentText className="text-sm" />
           </div>
-          <Button
+          <GoogleSignInButton
             onClick={handleContinue}
-            size="lg"
-            className="mt-6 w-full"
+            className="mt-6 w-full max-w-none"
             disabled={isLoading}
           >
-            {isLoading ? 'Открываем вход...' : 'Продолжить'}
-          </Button>
+            {isLoading ? 'Открываем вход...' : 'Войти через Google'}
+          </GoogleSignInButton>
         </div>
       </section>
     </Layout>

@@ -17,53 +17,55 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
+const TELEGRAM_LINK = 'https://t.me/@FreedomBIM';
+
 const revitPlans = [
   {
-    name: 'LOD 100',
+    name: 'BIM 1',
     subtitle: 'Для команды из 2–4 человек',
-    price: '8 900',
+    price: '100',
     specs: [
-      { label: 'CPU', value: '3 × 3.3 ГГц' },
-      { label: 'RAM', value: '10 Гб' },
-      { label: 'NVMe', value: '50 Гб' },
-      { label: 'Канал', value: '500 Мбит/с' },
+      { label: 'CPU', value: '4' },
+      { label: 'RAM', value: '4 Гб' },
+      { label: 'NVMe', value: '10 Гб' },
+      { label: 'Канал', value: '100 Мбит/с' },
       { label: 'Бэкап', value: 'глубина — 4 дня' },
     ],
   },
   {
-    name: 'LOD 200',
+    name: 'BIM 2',
     subtitle: 'Для команды из 5–8 человек',
-    price: '11 200',
+    price: '130',
     popular: true,
     specs: [
-      { label: 'CPU', value: '4 × 3.3 ГГц' },
+      { label: 'CPU', value: '6' },
       { label: 'RAM', value: '12 Гб' },
-      { label: 'NVMe', value: '70 Гб' },
-      { label: 'Канал', value: '500 Мбит/с' },
+      { label: 'NVMe', value: '20 Гб' },
+      { label: 'Канал', value: '200 Мбит/с' },
       { label: 'Бэкап', value: 'глубина — 4 дня' },
     ],
   },
   {
-    name: 'LOD 300',
+    name: 'BIM 3',
     subtitle: 'Для команды из 9–15 человек',
-    price: '14 600',
+    price: '170',
     specs: [
-      { label: 'CPU', value: '6 × 4.2 ГГц' },
+      { label: 'CPU', value: '8' },
       { label: 'RAM', value: '16 Гб' },
-      { label: 'NVMe', value: 'от 120 Гб' },
-      { label: 'Канал', value: '1 Гбит/с' },
+      { label: 'NVMe', value: 'от 30 Гб' },
+      { label: 'Канал', value: '300 Мбит/с' },
       { label: 'Бэкап', value: 'глубина — 4 дня' },
     ],
   },
   {
-    name: 'LOD 400',
+    name: 'BIM 4',
     subtitle: 'Для команды от 15 человек',
-    price: 'от 17 500',
+    price: 'от 200',
     specs: [
-      { label: 'CPU', value: '8 × 4.5 ГГц' },
+      { label: 'CPU', value: '12' },
       { label: 'RAM', value: '24 Гб' },
-      { label: 'NVMe', value: 'от 200 Гб' },
-      { label: 'Канал', value: '1 Гбит/с' },
+      { label: 'NVMe', value: 'от 50 Гб' },
+      { label: 'Канал', value: '500 бит/с' },
       { label: 'Бэкап', value: 'глубина — 4 дня' },
     ],
   },
@@ -73,38 +75,26 @@ const archicadPlans = [
   {
     name: 'Team S',
     subtitle: 'Для команды из 2–4 человек',
-    price: '9 500',
+    price: 'от 1 000',
     specs: [
-      { label: 'CPU', value: '4 × 3.3 ГГц' },
-      { label: 'RAM', value: '12 Гб' },
-      { label: 'NVMe', value: '60 Гб' },
-      { label: 'Канал', value: '500 Мбит/с' },
-      { label: 'Бэкап', value: 'глубина — 4 дня' },
+
     ],
   },
   {
     name: 'Team M',
-    subtitle: 'Для команды из 5–10 человек',
-    price: '13 000',
+    subtitle: 'Для команды из 5–15 человек',
+    price: 'от 2 000',
     popular: true,
     specs: [
-      { label: 'CPU', value: '6 × 3.8 ГГц' },
-      { label: 'RAM', value: '16 Гб' },
-      { label: 'NVMe', value: '100 Гб' },
-      { label: 'Канал', value: '1 Гбит/с' },
-      { label: 'Бэкап', value: 'глубина — 4 дня' },
+
     ],
   },
   {
     name: 'Team L',
-    subtitle: 'Для команды от 10 человек',
-    price: 'от 16 500',
+    subtitle: 'Для команды от 15 человек',
+    price: 'от 3 500',
     specs: [
-      { label: 'CPU', value: '8 × 4.2 ГГц' },
-      { label: 'RAM', value: '24 Гб' },
-      { label: 'NVMe', value: 'от 150 Гб' },
-      { label: 'Канал', value: '1 Гбит/с' },
-      { label: 'Бэкап', value: 'глубина — 4 дня' },
+
     ],
   },
 ];
@@ -112,47 +102,47 @@ const archicadPlans = [
 const advantages = [
   {
     icon: Shield,
-    title: 'Независимы от вендоров',
+    title: 'Единая BIM-модель',
     description:
-      'Наши серверы не связаны с облачными службами Autodesk или Graphisoft и не могут быть внезапно заблокированы или отключены.',
+      'Все участники проекта работают с актуальной BIM-моделью в одной цифровой среде. Изменения синхронизируются и доступны всей команде.',
   },
   {
     icon: Wrench,
-    title: 'Берём рутину на себя',
+    title: 'BIM-координация дисциплин',
     description:
-      'Полностью управляем сервером: резервное копирование, обновления, мониторинг дисков и производительности.',
+      'Архитектура, конструкции и инженерные разделы ведутся в единой BIM-логике. Совместимо с рабочими процессами на базе Autodesk и Graphisoft.',
   },
   {
     icon: Zap,
-    title: 'Скорость и поддержка',
+    title: 'Контроль BIM-данных',
     description:
-      'Сервер готов к работе за несколько часов. Поможем с настройкой станций: RSN, VPN, сетевой диск.',
+      'Управление версиями, доступами и историей изменений проекта. Все BIM-данные структурированы, защищены и доступны в нужный момент.',
   },
 ];
 
 const features = [
   {
     icon: Cloud,
-    title: 'Масштабируемость',
-    description: 'Увеличивайте ресурсы (память, диск, CPU) под требования проекта без простоев.',
+    title: 'Уменьшение ошибок',
+    description: 'Работа в единой среде позволяет выявлять коллизии на раннем этапе.',
   },
   {
     icon: HardDrive,
-    title: 'Общий сетевой диск',
+    title: 'Повышение эффективности команды',
     description:
-      'Высокоскоростной сетевой диск на том же сервере для любых файлов — уже включён в стоимость.',
+      'Комментарии прямо в модели, нет бесконечных PDF/WhatsApp правок.',
   },
   {
     icon: Server,
-    title: 'Надёжные дата-центры',
+    title: 'Контроль данных',
     description:
-      'Серверы в крупнейших дата-центрах с высочайшими стандартами безопасности и резервирования.',
+      'История изменений и контроль версий, видно кто и когда изменил.',
   },
   {
     icon: Clock,
-    title: 'Ежедневные бэкапы',
+    title: 'Ускорение работы',
     description:
-      'Автоматическое резервное копирование. Расписание и глубину хранения настроим под ваш запрос.',
+      'Меньше ошибок - меньше переделок.',
   },
 ];
 
@@ -164,9 +154,17 @@ interface PlanCardProps {
     popular?: boolean;
     specs: { label: string; value: string }[];
   };
+  priceSuffix?: string;
+  priceNote?: string;
+  showTrialButton?: boolean;
 }
 
-function PlanCard({ plan }: PlanCardProps) {
+function PlanCard({
+  plan,
+  priceSuffix = '$/мес.',
+  priceNote,
+  showTrialButton = true,
+}: PlanCardProps) {
   return (
     <Card
       className={`relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
@@ -183,8 +181,9 @@ function PlanCard({ plan }: PlanCardProps) {
         <p className="mt-1 text-sm text-muted-foreground">{plan.subtitle}</p>
         <div className="mt-4 flex items-baseline gap-1">
           <span className="text-3xl font-bold text-primary">{plan.price}</span>
-          <span className="text-sm text-muted-foreground">руб./мес.</span>
+          <span className="text-sm text-muted-foreground">{priceSuffix}</span>
         </div>
+        {priceNote && <p className="mt-1 text-sm text-muted-foreground">{priceNote}</p>}
         <div className="mt-6 space-y-3">
           {plan.specs.map((spec) => (
             <div key={spec.label} className="flex items-center justify-between text-sm">
@@ -193,9 +192,13 @@ function PlanCard({ plan }: PlanCardProps) {
             </div>
           ))}
         </div>
-        <Button className="mt-6 w-full" variant="outline-primary">
-          Попробовать бесплатно
-        </Button>
+        {showTrialButton && (
+          <Button asChild className="mt-6 w-full" variant="outline-primary">
+            <a href={TELEGRAM_LINK} target="_blank" rel="noreferrer">
+              Попробовать бесплатно
+            </a>
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -208,33 +211,49 @@ export default function Collaboration() {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 py-20 lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.08),transparent_60%)]" />
         <div className="container relative mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
-              <Server className="h-4 w-4" />
-              Аренда серверов для BIM-команд
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-16">
+            <div className="text-center lg:text-left">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
+                <Server className="h-4 w-4" />
+                Совместная работа для BIM-команд
+              </div>
+              <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
+                Совместная BIM работа{' '}
+                <span className="text-primary">над проектами</span>
+              </h1>
+              <p className="mt-6 text-lg text-muted-foreground md:text-xl">
+                Единая BIM-среда, совместимая с решениями Autodesk и Graphisoft,
+                где команда работает с одной моделью и актуальными данными.
+              </p>
+              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:items-start lg:justify-start">
+                <Button asChild size="xl" variant="hero">
+                  <a href={TELEGRAM_LINK} target="_blank" rel="noreferrer">
+                    <Monitor className="mr-2 h-5 w-5" />
+                    Попробовать бесплатно
+                  </a>
+                </Button>
+                <Button asChild size="lg" variant="outline-primary">
+                  <a href="#pricing">
+                    Тарифные планы
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Бесплатный доступ — оцените результат до оплаты
+              </p>
             </div>
-            <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-              Совместная работа в{' '}
-              <span className="text-primary">Revit</span> и{' '}
-              <span className="text-primary">ArchiCAD</span>
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground md:text-xl">
-              Арендуйте готовый сервер для вашей команды. Revit Server и ArchiCAD BIM Server —
-              настроены, защищены и готовы к работе за несколько часов.
-            </p>
-            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button size="xl" variant="hero">
-                <Monitor className="mr-2 h-5 w-5" />
-                Бесплатный тест-драйв
-              </Button>
-              <Button size="lg" variant="outline-primary">
-                Тарифные планы
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+
+            <div className="mx-auto w-full max-w-2xl lg:max-w-[520px]">
+              <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/85 p-3 shadow-2xl shadow-primary/10 backdrop-blur sm:p-4">
+                <img
+                  src="/teamwork.png"
+                  alt="Схема совместной работы офисов через центральный сервер"
+                  className="w-full rounded-[1.5rem] object-cover"
+                  loading="eager"
+                />
+              </div>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              5 дней бесплатного доступа — оцените результат до оплаты
-            </p>
           </div>
         </div>
       </section>
@@ -273,11 +292,11 @@ export default function Collaboration() {
                 <TabsList className="mt-6">
                   <TabsTrigger value="revit" className="gap-2">
                     <Server className="h-4 w-4" />
-                    Revit Server
+                    Облачная версия
                   </TabsTrigger>
                   <TabsTrigger value="archicad" className="gap-2">
                     <Users className="h-4 w-4" />
-                    ArchiCAD Teamwork
+                    Коробочная версия
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -285,20 +304,18 @@ export default function Collaboration() {
               <TabsContent value="revit" className="space-y-6">
                 <Card>
                   <CardContent className="p-6 md:p-8">
-                    <h3 className="text-xl font-bold">Revit Server</h3>
+                    <h3 className="text-xl font-bold">Облачный сервер</h3>
                     <p className="mt-3 text-muted-foreground leading-relaxed">
-                      Серверный компонент от Autodesk для организации совместной работы над проектами
-                      в Revit. Мы размещаем и управляем серверами для архитектурных и инженерных
-                      компаний по всей России и СНГ. Вам не нужно закупать оборудование, настраивать
-                      IP-адреса, межсетевые экраны и VPN — мы запустим сервер за пару часов.
+                      Вам не нужно закупать оборудование, настраивать
+                      IP-адреса, межсетевые экраны и VPN — мы запустим сервер за сутки.
                     </p>
                     <ul className="mt-6 space-y-3">
                       {[
                         'Совместная работа над моделью в реальном времени',
                         'Центральные модели на удалённом сервере',
-                        'Поддержка Revit 2019–2026',
-                        'Безопасное VPN-подключение',
-                        'Сетевой диск для обмена файлами',
+                        'Доступ из разных локаций',
+                        'Быстрое подключение',
+                        'Не нужны IT-инфраструктура и специалисты',
                       ].map((item) => (
                         <li key={item} className="flex items-start gap-3 text-sm">
                           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -313,20 +330,20 @@ export default function Collaboration() {
               <TabsContent value="archicad" className="space-y-6">
                 <Card>
                   <CardContent className="p-6 md:p-8">
-                    <h3 className="text-xl font-bold">ArchiCAD BIM Server (Teamwork)</h3>
+                    <h3 className="text-xl font-bold">Физический сервер</h3>
                     <p className="mt-3 text-muted-foreground leading-relaxed">
-                      BIM Server от Graphisoft позволяет командам архитекторов работать над одним
-                      проектом одновременно в ArchiCAD. Мы предоставляем полностью настроенный сервер
-                      с поддержкой Teamwork — без необходимости покупать собственное серверное
-                      оборудование.
+                      Мы предоставляем полностью настроенный физический сервер
+                      который будет находиться у вас офисе.
+
                     </p>
                     <ul className="mt-6 space-y-3">
                       {[
-                        'Совместная работа над проектом в ArchiCAD Teamwork',
-                        'Резервирование и управление ролями пользователей',
-                        'Поддержка ArchiCAD 24–28',
-                        'Быстрое подключение через Delta-синхронизацию',
-                        'Сетевой диск и бэкапы включены',
+                        'Совместная работа',
+                        'Полный контроль над данными',
+                        'Файловый сервер',
+                        'Независимость от интернета',
+                        'Удаленное подключение через VPN',
+                        'Гибкая настройка инфраструктуры',
                       ].map((item) => (
                         <li key={item} className="flex items-start gap-3 text-sm">
                           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -377,11 +394,11 @@ export default function Collaboration() {
               <TabsList>
                 <TabsTrigger value="revit" className="gap-2">
                   <Server className="h-4 w-4" />
-                  Revit Server
+                  Облачная версия
                 </TabsTrigger>
                 <TabsTrigger value="archicad" className="gap-2">
                   <Users className="h-4 w-4" />
-                  ArchiCAD Teamwork
+                  Коробочная версия
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -397,7 +414,13 @@ export default function Collaboration() {
             <TabsContent value="archicad">
               <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {archicadPlans.map((plan) => (
-                  <PlanCard key={plan.name} plan={plan} />
+                  <PlanCard
+                    key={plan.name}
+                    plan={plan}
+                    priceSuffix="$"
+                    priceNote="Разовая оплата"
+                    showTrialButton={false}
+                  />
                 ))}
               </div>
             </TabsContent>
@@ -415,22 +438,18 @@ export default function Collaboration() {
           <Card className="overflow-hidden border-0 gradient-primary">
             <CardContent className="flex flex-col items-center gap-6 p-10 text-center md:p-16">
               <h2 className="text-3xl font-bold text-primary-foreground md:text-4xl">
-                Попробуйте бесплатно 5 дней
+                Попробуйте бесплатно
               </h2>
               <p className="max-w-xl text-primary-foreground/80">
                 Предоставляем бесплатный доступ к серверу, чтобы вы могли оценить скорость и удобство
                 совместной работы перед оплатой.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="bg-background text-foreground hover:bg-background/90"
-                  onClick={() =>
-                    window.open('https://t.me/+JKVWYQV6MDkwZWIy', '_blank')
-                  }
-                >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Написать в Telegram
+                <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90">
+                  <a href={TELEGRAM_LINK} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Написать в Telegram
+                  </a>
                 </Button>
               </div>
             </CardContent>

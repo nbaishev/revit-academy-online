@@ -55,17 +55,14 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
-              <Button asChild variant="hero" size="xl">
-                <Link to="/courses">
-                  Начать обучение
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline-primary" size="xl">
-                  <Link to="/courses/2">
-                    <Play className="mr-2 h-5 w-5" />
-                    Бесплатный курс
+              <Button
+                  asChild
+                  variant="default"
+                  size="xl"
+                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                >
+                  <Link to="/entrance-test">
+                    АР
                   </Link>
                 </Button>
                 <Button
@@ -75,7 +72,43 @@ export function HeroSection() {
                   className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
                 >
                   <Link to="/entrance-test">
-                    Пройти тест
+                    КР
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="default"
+                  size="xl"
+                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                >
+                  <Link to="/entrance-test">
+                    ВК
+                  </Link>
+                </Button><Button
+                  asChild
+                  variant="default"
+                  size="xl"
+                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                >
+                  <Link to="/entrance-test">
+                    ВК
+                  </Link>
+                </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline-primary" size="xl">
+                  <Link to="/courses/2">
+                    <Play className="mr-2 h-5 w-5" />
+                    Начните сегодня
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="default"
+                  size="xl"
+                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                >
+                  <Link to="/entrance-test">
+                    Получить скидку
                   </Link>
                 </Button>
               </div>
@@ -84,7 +117,7 @@ export function HeroSection() {
 
           {/* Visual */}
           <div className="relative hidden lg:block">
-            <div className="relative animate-float">
+            <div className="relative animate-float pb-8">
               {/* Main Card */}
               <div className="relative z-10 rounded-2xl bg-card p-6 shadow-card-hover">
                 <div className="mb-4 flex items-center gap-3">
@@ -134,22 +167,34 @@ export function HeroSection() {
                 </div>
               </div>
 
-              <div className="absolute -bottom-4 -left-4 rounded-xl bg-card p-4 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-card gradient-primary text-xs text-primary-foreground"
-                      >
-                        {String.fromCharCode(64 + i)}
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">+1.5K студентов</span>
+            </div>
+
+            <a
+              href="https://www.instagram.com/p/DVasLa_inYf/"
+              target="_blank"
+              rel="noreferrer"
+              className="group relative z-10 mt-2 flex items-center justify-between gap-4 rounded-2xl border border-primary/15 bg-card p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-card-hover"
+            >
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
+                  Рассрочка
+                </div>
+                <div className="mt-1 text-lg font-semibold text-foreground">от mbank</div>
+                <div className="text-sm text-muted-foreground">
+                  Нажмите, чтобы перейти по ссылке и узнать подробнее.
                 </div>
               </div>
-            </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <div className="rounded-xl bg-white px-4 py-3 shadow-sm">
+                  <img
+                    src="/mbank_logo_full.svg"
+                    alt="Логотип mbank"
+                    className="h-7 w-auto object-contain"
+                  />
+                </div>
+                <ArrowRight className="h-5 w-5 text-primary transition-transform duration-300 group-hover:translate-x-1" />
+              </div>
+            </a>
           </div>
         </div>
       </div>

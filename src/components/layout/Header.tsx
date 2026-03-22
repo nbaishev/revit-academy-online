@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { BookOpen, User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
@@ -112,9 +113,9 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={handleLoginClick} variant="default" size="default">
+            <GoogleSignInButton onClick={handleLoginClick}>
               Войти через Google
-            </Button>
+            </GoogleSignInButton>
           )}
         </div>
 
@@ -191,9 +192,9 @@ export function Header() {
                 </>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Button onClick={handleMobileLoginClick} variant="default" className="w-full">
+                  <GoogleSignInButton onClick={handleMobileLoginClick} className="w-full max-w-none">
                     Войти через Google
-                  </Button>
+                  </GoogleSignInButton>
                 </div>
               )}
             </div>
