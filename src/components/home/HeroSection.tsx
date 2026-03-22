@@ -46,7 +46,7 @@ export function HeroSection() {
                   size="xl"
                   className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
                 >
-                  <Link to="/entrance-test">
+                  <Link to="/courses/1">
                     АР
                   </Link>
                 </Button>
@@ -56,7 +56,7 @@ export function HeroSection() {
                   size="xl"
                   className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
                 >
-                  <Link to="/entrance-test">
+                  <Link to="/courses/6">
                     КР
                   </Link>
                 </Button>
@@ -66,8 +66,8 @@ export function HeroSection() {
                   size="xl"
                   className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
                 >
-                  <Link to="/entrance-test">
-                    ВК
+                  <Link to="/courses/4">
+                    ОВиК
                   </Link>
                 </Button><Button
                   asChild
@@ -75,7 +75,7 @@ export function HeroSection() {
                   size="xl"
                   className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
                 >
-                  <Link to="/entrance-test">
+                  <Link to="/courses/5">
                     ВК
                   </Link>
                 </Button>
