@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-[minmax(0,1.35fr)_repeat(4,minmax(0,1fr))]">
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2">
@@ -58,6 +58,13 @@ export function Footer() {
                   Instagram
                 </a>
               </li>
+            </ul>
+          </div>
+
+          {/* Community */}
+          <div>
+            <h3 className="mb-4 font-semibold">BIM сообщества ЦА</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="https://t.me/ustaBIM_Kg" className="transition-colors hover:text-primary">
                   Кыргызстан

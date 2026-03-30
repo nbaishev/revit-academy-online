@@ -1,8 +1,23 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Play, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Play, ArrowRight } from 'lucide-react';
+import { api } from '@/lib/api';
+import { PublicStats } from '@/lib/types';
+import { pluralizeRu } from '@/lib/utils';
 
 export function HeroSection() {
+  const { data: publicStats } = useQuery<PublicStats>({
+    queryKey: ['public-stats'],
+    queryFn: () => api.getPublicStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const studentsCount = publicStats?.total_users;
+  const studentsLabel =
+    typeof studentsCount === 'number'
+      ? `${studentsCount.toLocaleString('ru-RU')} ${pluralizeRu(studentsCount, ['студент', 'студента', 'студентов'])}`
+      : '... студентов';
 
   return (
     <section className="relative overflow-hidden gradient-hero">
@@ -21,7 +36,7 @@ export function HeroSection() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
               </span>
-              Более 70 студентов уже обучаются
+              На платформе уже {studentsLabel}
             </div>
 
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">

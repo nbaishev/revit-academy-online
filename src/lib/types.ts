@@ -71,6 +71,18 @@ export interface AuthTokens {
   refresh: string;
 }
 
+export interface PublicStats {
+  total_users: number;
+}
+
+export interface ModeratorUserSummary {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  date_joined: string;
+}
+
 export interface AdminStats {
   total_users: number;
   total_courses: number;
@@ -99,6 +111,13 @@ export interface AdminCourseCompletionsResponse {
   total_users: number;
   completed_users: number;
   results: AdminCourseCompletionEntry[];
+}
+
+export interface ModeratorCourseAccessGrantResponse {
+  created: boolean;
+  purchase: Purchase;
+  user: ModeratorUserSummary;
+  course: ApiCourse;
 }
 
 export interface EntranceQuizQuestionOption {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +16,9 @@ import {
   MessageCircle,
   Monitor,
   ArrowRight,
+  Quote,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 const TELEGRAM_LINK = 'https://t.me/FreedomBIM';
@@ -146,6 +150,40 @@ const features = [
   },
 ];
 
+const testimonials = [
+  {
+    author: 'Джаманкулов Эдил',
+    company: 'Arlan Company',
+    meta: 'Сертифицированный Главный Архитектор, Бишкек, Кыргызстан',
+    review: [
+      'Установили сервер с ArchiCAD Teamwork и Revit Server — это полностью изменило работу. Теперь архитекторы и инженеры всех направлений работают в едином пространстве: обмениваются файлами без задержек, всё синхронизируется в реальном времени, ничего не теряется и не дублируется.',
+      'ArchiCAD Teamwork дал удобную параллельную работу над моделями, а Revit Server стал настоящим спасением для инженеров. Рекомендую.',
+    ],
+  },
+  {
+    author: 'Кривенков Павел Дмитриевич',
+    company: 'ООО "ОЛЛИНБИМ"',
+    meta: 'Генеральный директор, Москва, РФ',
+    review: [
+      'Наша компания занимается крупными объектами, где BIM — не роскошь, а необходимость. Команда у нас большая, до 20 человек, и все работают удалённо: кто в Москве, кто в регионах, у всех разное качество интернета. Когда встал вопрос о стабильной совместной работе в Revit, долго искали решение, которое не подведёт в самый ответственный момент.',
+      'Остановились на Revit Server. И ни разу не пожалели.',
+      'Система работает как часы. При нашей географии и разной скорости интернета доступ к моделям всегда стабильный, без зависаний и потери данных. 20 человек спокойно ведут большие объекты параллельно — никто никого не ждёт, никаких «залоченных» файлов и копий с приставкой `final_3`. Всё централизовано, всё под контролем.',
+      'Но главное, что хочется отметить — это техподдержка. В Москве привыкли к сервису, но здесь ребята превзошли ожидания. Реагируют быстро, вопросы решают по делу, без воды. С такими партнёрами чувствуешь себя спокойно.',
+      'Если ваша команда работает в Revit, особенно если вы распределены географически, — рекомендую. Это решение, которое реально вывозит большие проекты без головной боли.',
+    ],
+  },
+  {
+    author: 'Ажыгулов Эркин Асылбекович',
+    company: 'ООО "2Н Групп"',
+    meta: 'Генеральный директор',
+    review: [
+      'Работаем с Revit Server на крупных объектах. Один из последних проектов — сложный объект с плотным графиком стройки. Исполнительная документация шла параллельно с монтажом, правки вносились круглосуточно: день и ночь на объекте кипела работа, смежники постоянно запрашивали актуальные данные, вносили корректировки.',
+      'Именно здесь Revit Server показал себя на все сто. Вся команда — и проектировщики в офисе, и инженеры на площадке, и субподрядчики в разных городах — работали в единой среде. Всегда была актуальная версия, никто не боялся, что "слетят" данные или кто-то случайно всё перезапишет. Каждый смежник был уверен в надежности системы: знал, что модель актуальна, а исполнительная документация формируется на основе свежих решений.',
+      'Стабильный доступ, никаких сбоев даже при ночных подключениях. Техподдержка всегда на связи. Для нас это не просто инструмент, а уверенность в том, что стройка не остановится из-за проблем с документацией. Рекомендую.',
+    ],
+  },
+];
+
 interface PlanCardProps {
   plan: {
     name: string;
@@ -205,6 +243,15 @@ function PlanCard({
 }
 
 export default function Collaboration() {
+  const [expandedTestimonials, setExpandedTestimonials] = useState<Record<string, boolean>>({});
+
+  const toggleTestimonial = (author: string) => {
+    setExpandedTestimonials((current) => ({
+      ...current,
+      [author]: !current[author],
+    }));
+  };
+
   return (
     <Layout>
       {/* Hero */}
@@ -375,6 +422,71 @@ export default function Collaboration() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 lg:py-20">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+              <Quote className="h-4 w-4" />
+              Отзывы клиентов
+            </div>
+            <h2 className="mt-6 text-3xl font-bold md:text-4xl">
+              Как совместная BIM-работа меняет проекты
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Опыт компаний, которые уже перевели команды на Revit Server и ArchiCAD Teamwork.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            {testimonials.map((testimonial) => {
+              const isExpanded = Boolean(expandedTestimonials[testimonial.author]);
+
+              return (
+                <Card
+                  key={testimonial.author}
+                  className="h-full border-primary/10 bg-gradient-to-br from-background via-background to-primary/5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <CardContent className="flex h-full flex-col p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{testimonial.author}</h3>
+                        <p className="mt-1 font-medium text-primary">{testimonial.company}</p>
+                        <p className="mt-2 text-sm text-muted-foreground">{testimonial.meta}</p>
+                      </div>
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                        <Quote className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+
+                    <div className={`relative mt-6 flex-1 space-y-4 overflow-hidden ${isExpanded ? '' : 'max-h-52'}`}>
+                      {testimonial.review.map((paragraph, index) => (
+                        <p key={`${testimonial.author}-${index}`} className="text-sm leading-7 text-foreground/90">
+                          {paragraph}
+                        </p>
+                      ))}
+                      {!isExpanded && (
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/95 to-transparent" />
+                      )}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="mt-4 h-auto self-start px-0 text-primary hover:bg-transparent hover:text-primary/80"
+                      onClick={() => toggleTestimonial(testimonial.author)}
+                    >
+                      {isExpanded ? 'Свернуть' : 'Читать полностью'}
+                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>

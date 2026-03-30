@@ -4,7 +4,10 @@ import {
   User,
   Purchase,
   AuthTokens,
+  PublicStats,
   AdminCourseCompletionsResponse,
+  ModeratorCourseAccessGrantResponse,
+  ModeratorUserSummary,
   EntranceQuizStartResponse,
   EntranceQuizStatus,
   EntranceQuizClaimResponse,
@@ -153,6 +156,9 @@ export const api = {
   async getMyCourses() {
     return request<ApiCourse[]>('/me/courses/', { auth: true });
   },
+  async getPublicStats() {
+    return request<PublicStats>('/public/stats/');
+  },
   async getProgress() {
     return request<ProgressEntry[]>('/me/progress/', { auth: true });
   },
@@ -245,6 +251,20 @@ export const api = {
       { auth: true }
     );
     return res.results ?? (res as unknown as ApiCourse[]);
+  },
+  async adminSearchUsers(search: string, limit = 10) {
+    const query = new URLSearchParams({
+      search,
+      limit: String(limit),
+    });
+    return request<ModeratorUserSummary[]>(`/moderator/users/?${query.toString()}`, { auth: true });
+  },
+  async adminGrantCourseAccess(payload: { user_id: string; course_id: string }) {
+    return request<ModeratorCourseAccessGrantResponse>('/moderator/course-access/grants/', {
+      method: 'POST',
+      auth: true,
+      body: JSON.stringify(payload),
+    });
   },
   async adminCreateCourse(payload: AdminCoursePayload) {
     const body = hasCourseFile(payload) ? toCourseFormData(payload) : JSON.stringify(payload);

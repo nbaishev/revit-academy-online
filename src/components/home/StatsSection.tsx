@@ -1,11 +1,21 @@
-const stats = [
-  { value: '70+', label: 'Студентов' },
-  { value: '6', label: 'Курсов' },
-  { value: '310+', label: 'Видеоуроков' },
-  { value: '4.8', label: 'Средний рейтинг' },
-];
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { PublicStats } from '@/lib/types';
 
 export function StatsSection() {
+  const { data: publicStats } = useQuery<PublicStats>({
+    queryKey: ['public-stats'],
+    queryFn: () => api.getPublicStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const stats = [
+    { value: publicStats?.total_users?.toLocaleString('ru-RU') ?? '...', label: 'Студентов' },
+    { value: '6', label: 'Курсов' },
+    { value: '310+', label: 'Видеоуроков' },
+    { value: '4.8', label: 'Средний рейтинг' },
+  ];
+
   return (
     <section className="border-y border-border bg-card py-12">
       <div className="container mx-auto px-4">
