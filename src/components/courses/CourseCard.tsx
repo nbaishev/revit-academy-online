@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ApiCourse } from '@/lib/types';
-import { BookOpen, Coins, Layers } from 'lucide-react';
+import { BookOpen, Coins, Layers, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, pluralizeRu } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ interface CourseCardProps {
 
 export function CourseCard({ course, className = '' }: CourseCardProps) {
   const isFree = course.is_free || course.price === null || course.price === undefined;
+  const isOffline = course.delivery_mode === 'offline';
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
   const priceValue = typeof course.price === 'number' ? course.price : null;
@@ -81,6 +82,11 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
             {course.level}
           </Badge>
+          {isOffline && (
+            <Badge className="bg-sky-500 text-white hover:bg-sky-500">
+              Оффлайн
+            </Badge>
+          )}
           {!isPublished && (
             <Badge className="bg-amber-500 text-white hover:bg-amber-500">
               Скоро
@@ -98,18 +104,27 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
         </p>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <BookOpen className="h-4 w-4" />
-            <span>
-              {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Layers className="h-4 w-4" />
-            <span>
-              {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
-            </span>
-          </div>
+          {isOffline ? (
+            <div className="flex items-center gap-1">
+              <MessageCircle className="h-4 w-4" />
+              <span>Запись к ментору через Telegram</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                <span>
+                  {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Layers className="h-4 w-4" />
+                <span>
+                  {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
+                </span>
+              </div>
+            </>
+          )}
           {!isFree && (
             <div className="flex items-center gap-1">
               <Coins className="h-4 w-4" />

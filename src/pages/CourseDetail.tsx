@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CheckCircle2, Play, Lock, ArrowLeft, Award, Layers } from 'lucide-react';
+import { Clock, CheckCircle2, Play, Lock, ArrowLeft, Award, Layers, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -95,6 +95,34 @@ const resolveVideoSource = (rawVideoUrl?: string): VideoSource | null => {
   } catch {
     return { type: 'iframe', src: raw };
   }
+};
+
+const normalizeTelegramUsername = (value?: string | null) => {
+  const raw = (value ?? '').trim();
+  if (!raw) return '';
+  return raw
+    .replace(/^https?:\/\/t\.me\//i, '')
+    .replace(/^t\.me\//i, '')
+    .replace(/^@+/, '')
+    .replace(/\/+$/, '');
+};
+
+const buildTelegramBookingUrl = ({
+  username,
+  courseTitle,
+  userName,
+  userEmail,
+}: {
+  username?: string | null;
+  courseTitle: string;
+  userName?: string | null;
+  userEmail?: string | null;
+}) => {
+  const normalizedUsername = normalizeTelegramUsername(username);
+  if (!normalizedUsername) return '';
+  const draftText = `Здравствуйте! Я купил(а) курс "${courseTitle}". Хочу записаться на встречу с ментором. Меня зовут ${userName || 'не указано'}, email: ${userEmail || 'не указан'}.`;
+  const params = new URLSearchParams({ text: draftText });
+  return `https://t.me/${normalizedUsername}?${params.toString()}`;
 };
 
 const CourseDetail = () => {
@@ -315,6 +343,7 @@ const CourseDetail = () => {
 
   const hasAccess = hasAccessToCourse({ id: course.id, is_free: course.is_free });
   const isFree = course.is_free || course.price === null || course.price === undefined;
+  const isOffline = course.delivery_mode === 'offline';
   const isPublished = course.published ?? true;
   const priceValue = typeof course.price === 'number' ? course.price : null;
   const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
@@ -346,6 +375,86 @@ const CourseDetail = () => {
   const lessonsCount = course.lessons_count ?? 0;
   const modulesCount = course.modules_count ?? 0;
   const isSelectedCompleted = Boolean(selectedLesson && completedLessonIds.has(selectedLesson));
+  const mentorTelegramUsername = normalizeTelegramUsername(course.mentor_telegram_username);
+  const telegramBookingUrl = buildTelegramBookingUrl({
+    username: mentorTelegramUsername,
+    courseTitle: course.title,
+    userName: user?.name,
+    userEmail: user?.email,
+  });
+
+  if (user && hasAccess && content && isOffline) {
+    return (
+      <Layout>
+        <section className="gradient-hero py-12">
+          <div className="container mx-auto px-4">
+            <Link
+              to="/courses"
+              className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Все курсы
+            </Link>
+
+            <div className="mx-auto max-w-4xl space-y-6">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">{course.level}</Badge>
+                <Badge className="bg-sky-500 text-white hover:bg-sky-500">Оффлайн</Badge>
+              </div>
+
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700">
+                  <MessageCircle className="h-8 w-8" />
+                </div>
+
+                <h1 className="mb-3 text-3xl font-bold md:text-4xl">{course.title}</h1>
+                <p className="text-lg text-muted-foreground">{course.description}</p>
+
+                {course.full_description && (
+                  <div className="mt-6 rounded-2xl bg-muted/40 p-5 text-sm leading-7 text-foreground/90">
+                    {course.full_description}
+                  </div>
+                )}
+
+                <div className="mt-6 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-5">
+                  <h2 className="mb-3 text-lg font-semibold">Как проходит запись</h2>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>После нажатия кнопки откроется Telegram-чат с ментором.</p>
+                    <p>Сообщение уже будет заполнено названием курса и вашими контактами.</p>
+                    <p>Дальше вы согласуете дату и формат встречи напрямую с ментором.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  {telegramBookingUrl ? (
+                    <Button asChild variant="hero" size="lg">
+                      <a href={telegramBookingUrl} target="_blank" rel="noreferrer">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Записаться на встречу
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button variant="hero" size="lg" disabled>
+                      Записаться на встречу
+                    </Button>
+                  )}
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/dashboard">Вернуться в кабинет</Link>
+                  </Button>
+                </div>
+
+                {!telegramBookingUrl && (
+                  <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+                    Контакт ментора еще не настроен. Обратитесь к администратору.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
 
   // User with access - show learning interface
   if (user && hasAccess && content) {
@@ -591,6 +700,11 @@ const CourseDetail = () => {
             <div className="lg:col-span-2">
               <div className="mb-4 flex flex-wrap gap-2">
                 <Badge variant="secondary">{course.level}</Badge>
+                {isOffline && (
+                  <Badge className="bg-sky-500 text-white hover:bg-sky-500">
+                    Оффлайн
+                  </Badge>
+                )}
                 {isFree && (
                   <Badge className="bg-green-500 text-white hover:bg-green-500">
                     Бесплатно
@@ -602,14 +716,23 @@ const CourseDetail = () => {
               <p className="mb-6 text-lg text-muted-foreground">{course.description}</p>
 
               <div className="mb-6 flex flex-wrap items-center gap-6 text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  <span>{lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  <span>{modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}</span>
-                </div>
+                {isOffline ? (
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    <span>Оффлайн-встреча с ментором по записи</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      <span>{lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-5 w-5" />
+                      <span>{modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -618,7 +741,11 @@ const CourseDetail = () => {
               <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-card">
                 <div className="mb-6 aspect-video overflow-hidden rounded-xl bg-muted">
                   <div className="flex h-full items-center justify-center gradient-primary">
-                    <Play className="h-16 w-16 text-primary-foreground" />
+                    {isOffline ? (
+                      <MessageCircle className="h-16 w-16 text-primary-foreground" />
+                    ) : (
+                      <Play className="h-16 w-16 text-primary-foreground" />
+                    )}
                   </div>
                 </div>
 
@@ -656,7 +783,13 @@ const CourseDetail = () => {
                       onClick={handlePurchase}
                       disabled={isPurchasing || !isPublished}
                     >
-                      {isPublished ? (isPurchasing ? 'Создаём платеж...' : 'Купить курс') : 'Скоро'}
+                      {isPublished
+                        ? isPurchasing
+                          ? 'Создаём платеж...'
+                          : isOffline
+                            ? 'Купить и записаться'
+                            : 'Купить курс'
+                        : 'Скоро'}
                     </Button>
                   )
                 ) : (
@@ -670,15 +803,19 @@ const CourseDetail = () => {
                 <ul className="mt-6 space-y-3 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>{lessonsCount} {pluralizeRu(lessonsCount, ['видеоурок', 'видеоурока', 'видеоуроков'])}</span>
+                    <span>
+                      {isOffline
+                        ? 'Оффлайн-встреча с ментором'
+                        : `${lessonsCount} ${pluralizeRu(lessonsCount, ['видеоурок', 'видеоурока', 'видеоуроков'])}`}
+                    </span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>Реальный проект</span>
+                    <span>{isOffline ? 'Запись через Telegram после оплаты' : 'Реальный проект'}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>Сертификат по окончании</span>
+                    <span>{isOffline ? 'Персональная консультация' : 'Сертификат по окончании'}</span>
                   </li>
                 </ul>
                 {purchaseError && (
@@ -692,60 +829,75 @@ const CourseDetail = () => {
         </div>
       </section>
 
-      {/* Outcomes */}
-      {/* Program */}
-      <section className="bg-muted/30 py-12">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Award className="h-5 w-5 text-primary" />
+      {isOffline ? (
+        course.full_description ? (
+          <section className="bg-muted/30 py-12">
+            <div className="container mx-auto px-4">
+              <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-card p-6 shadow-card">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Award className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-semibold">О курсе</h2>
+                </div>
+                <p className="whitespace-pre-line text-muted-foreground">{course.full_description}</p>
+              </div>
             </div>
-            <h2 className="text-2xl font-semibold">Программа курса</h2>
-          </div>
-
-          <Accordion type="multiple" className="space-y-4">
-            {course.modules?.map((module, moduleIndex) => (
-              <AccordionItem
-                key={module.id}
-                value={module.id}
-                className="overflow-hidden rounded-xl border border-border bg-card"
-              >
-                <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
-                      {moduleIndex + 1}
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold">{module.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {module.lessons.length} {pluralizeRu(module.lessons.length, ['урок', 'урока', 'уроков'])}
+          </section>
+        ) : null
+      ) : (
+        <section className="bg-muted/30 py-12">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Award className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-semibold">Программа курса</h2>
+            </div>
+            <Accordion type="multiple" className="space-y-4">
+              {course.modules?.map((module, moduleIndex) => (
+                <AccordionItem
+                  key={module.id}
+                  value={module.id}
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                >
+                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+                        {moduleIndex + 1}
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold">{module.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {module.lessons.length} {pluralizeRu(module.lessons.length, ['урок', 'урока', 'уроков'])}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="border-t border-border px-6 pb-4 pt-0">
-                  <ul className="divide-y divide-border">
-                    {module.lessons.map((lesson, lessonIndex) => (
-                      <li key={lesson.id} className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
-                            {lessonIndex + 1}
+                  </AccordionTrigger>
+                  <AccordionContent className="border-t border-border px-6 pb-4 pt-0">
+                    <ul className="divide-y divide-border">
+                      {module.lessons.map((lesson, lessonIndex) => (
+                        <li key={lesson.id} className="flex items-center justify-between py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs">
+                              {lessonIndex + 1}
+                            </div>
+                            <span>{lesson.title}</span>
                           </div>
-                          <span>{lesson.title}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <span>{lesson.duration}</span>
-                          {!hasAccess && <Lock className="h-4 w-4" />}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            <span>{lesson.duration}</span>
+                            {!hasAccess && <Lock className="h-4 w-4" />}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      )}
     </Layout>
   );
 };

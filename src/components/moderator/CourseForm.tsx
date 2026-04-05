@@ -11,10 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ApiCourse } from '@/lib/types';
+import { ApiCourse, CourseDeliveryMode } from '@/lib/types';
 import { Plus, Trash2, ImageIcon } from 'lucide-react';
 
 type CourseLevel = 'Начинающий' | 'Средний' | 'Продвинутый';
+
+const normalizeTelegramUsername = (value: string) =>
+  value
+    .trim()
+    .replace(/^https?:\/\/t\.me\//i, '')
+    .replace(/^t\.me\//i, '')
+    .replace(/^@+/, '')
+    .replace(/\/+$/, '');
 
 export type LessonInput = {
   id: string;
@@ -36,6 +44,8 @@ export type CourseFormValues = {
   description: string;
   full_description?: string;
   level: CourseLevel;
+  delivery_mode: CourseDeliveryMode;
+  mentor_telegram_username?: string | null;
   is_free: boolean;
   price?: number | null;
   discount_price?: number | null;
@@ -56,6 +66,8 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const [description, setDescription] = useState(course?.description || '');
   const [fullDescription, setFullDescription] = useState(course?.full_description || '');
   const [level, setLevel] = useState<CourseLevel>((course?.level as CourseLevel) || 'Начинающий');
+  const [deliveryMode, setDeliveryMode] = useState<CourseDeliveryMode>(course?.delivery_mode || 'online');
+  const [mentorTelegramUsername, setMentorTelegramUsername] = useState(course?.mentor_telegram_username || '');
   const [isFree, setIsFree] = useState(course?.is_free ?? true);
   const [price, setPrice] = useState(course?.price?.toString() || '');
   const [discountPrice, setDiscountPrice] = useState(course?.discount_price?.toString() || '');
@@ -87,19 +99,24 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
 
     const parsedPrice = price !== '' ? Number(price) : null;
     const parsedDiscountPrice = discountPrice !== '' ? Number(discountPrice) : null;
+    const normalizedMentorTelegramUsername =
+      normalizeTelegramUsername(mentorTelegramUsername) || null;
 
     const payload: CourseFormValues = {
       title,
       description,
       full_description: fullDescription,
       level,
+      delivery_mode: deliveryMode,
+      mentor_telegram_username:
+        deliveryMode === 'offline' ? normalizedMentorTelegramUsername : null,
       is_free: isFree,
       price: isFree ? null : parsedPrice,
       discount_price: isFree ? null : parsedDiscountPrice,
       preview_image: previewImageFile || undefined,
       background_video_url: backgroundVideoUrl || undefined,
       is_featured: isFeatured,
-      modules,
+      modules: deliveryMode === 'offline' ? [] : modules,
     };
 
     onSubmit(payload);
@@ -213,16 +230,31 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-border p-4">
-            <div>
-              <Label htmlFor="isFree">Бесплатный курс</Label>
-              <p className="text-sm text-muted-foreground">
-                Если выключить, потребуется указать цену
-              </p>
-            </div>
-            <Switch id="isFree" checked={isFree} onCheckedChange={setIsFree} />
+          <div className="space-y-2">
+            <Label htmlFor="deliveryMode">Формат курса</Label>
+            <Select
+              value={deliveryMode}
+              onValueChange={(value) => setDeliveryMode(value as CourseDeliveryMode)}
+            >
+              <SelectTrigger id="deliveryMode">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">Онлайн</SelectItem>
+                <SelectItem value="offline">Оффлайн</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border p-4">
+          <div>
+            <Label htmlFor="isFree">Бесплатный курс</Label>
+            <p className="text-sm text-muted-foreground">
+              Если выключить, потребуется указать цену
+            </p>
+          </div>
+          <Switch id="isFree" checked={isFree} onCheckedChange={setIsFree} />
         </div>
 
         {!isFree && (
@@ -253,6 +285,22 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                 Оставьте пустым, если скидки нет.
               </p>
             </div>
+          </div>
+        )}
+
+        {deliveryMode === 'offline' && (
+          <div className="space-y-2">
+            <Label htmlFor="mentorTelegramUsername">Telegram ментора</Label>
+            <Input
+              id="mentorTelegramUsername"
+              value={mentorTelegramUsername}
+              onChange={(e) => setMentorTelegramUsername(e.target.value)}
+              placeholder="@mentor_username или https://t.me/mentor_username"
+              required={deliveryMode === 'offline'}
+            />
+            <p className="text-xs text-muted-foreground">
+              Укажите публичный username. Ссылка записи будет собрана автоматически.
+            </p>
           </div>
         )}
 
@@ -301,117 +349,118 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
       </div>
 
       {/* Modules */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label>Модули и уроки</Label>
-          <Button type="button" variant="ghost" size="sm" onClick={addModule}>
-            <Plus className="mr-1 h-4 w-4" />
-            Добавить модуль
-          </Button>
-        </div>
+      {deliveryMode === 'online' && (
         <div className="space-y-4">
-          {modules.map((module, moduleIndex) => (
-            <div
-              key={module.id}
-              className="rounded-lg border border-border p-4 space-y-4"
-            >
-              <div className="flex flex-wrap items-start gap-2">
-                <div className="flex-1 space-y-2 min-w-[200px]">
-                  <Label>Модуль {moduleIndex + 1}</Label>
-                  <Input
-                    value={module.title}
-                    onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
-                    placeholder="Название модуля"
-                  />
-                </div>
-                <div className="w-24 space-y-2">
-                  <Label>Порядок</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={module.order ?? moduleIndex + 1}
-                    onChange={(e) => updateModule(moduleIndex, 'order', e.target.value)}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="mt-6"
-                  onClick={() => removeModule(moduleIndex)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Lessons */}
-              <div className="ml-4 space-y-2 border-l-2 border-border/50 pl-4">
-                {module.lessons.map((lesson, lessonIndex) => (
-                  <div
-                    key={lesson.id}
-                    className="grid gap-2 rounded-lg bg-muted/30 p-3 sm:grid-cols-4"
-                  >
+          <div className="flex items-center justify-between">
+            <Label>Модули и уроки</Label>
+            <Button type="button" variant="ghost" size="sm" onClick={addModule}>
+              <Plus className="mr-1 h-4 w-4" />
+              Добавить модуль
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {modules.map((module, moduleIndex) => (
+              <div
+                key={module.id}
+                className="rounded-lg border border-border p-4 space-y-4"
+              >
+                <div className="flex flex-wrap items-start gap-2">
+                  <div className="flex-1 space-y-2 min-w-[200px]">
+                    <Label>Модуль {moduleIndex + 1}</Label>
                     <Input
-                      value={lesson.title}
-                      onChange={(e) =>
-                        updateLesson(moduleIndex, lessonIndex, 'title', e.target.value)
-                      }
-                      placeholder="Название урока"
+                      value={module.title}
+                      onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
+                      placeholder="Название модуля"
                     />
-                    <Input
-                      value={lesson.duration}
-                      onChange={(e) =>
-                        updateLesson(moduleIndex, lessonIndex, 'duration', e.target.value)
-                      }
-                      placeholder="Длительность"
-                    />
-                    <Input
-                      value={lesson.video_url}
-                      onChange={(e) =>
-                        updateLesson(moduleIndex, lessonIndex, 'video_url', e.target.value)
-                      }
-                      placeholder="Ссылка на видео"
-                      className="sm:col-span-2"
-                    />
-                    <div className="flex items-center justify-between sm:col-span-4">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">Порядок</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={lesson.order ?? lessonIndex + 1}
-                          onChange={(e) =>
-                            updateLesson(moduleIndex, lessonIndex, 'order', e.target.value)
-                          }
-                          className="w-20"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeLesson(moduleIndex, lessonIndex)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => addLesson(moduleIndex)}
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  Добавить урок
-                </Button>
+                  <div className="w-24 space-y-2">
+                    <Label>Порядок</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={module.order ?? moduleIndex + 1}
+                      onChange={(e) => updateModule(moduleIndex, 'order', e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="mt-6"
+                    onClick={() => removeModule(moduleIndex)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="ml-4 space-y-2 border-l-2 border-border/50 pl-4">
+                  {module.lessons.map((lesson, lessonIndex) => (
+                    <div
+                      key={lesson.id}
+                      className="grid gap-2 rounded-lg bg-muted/30 p-3 sm:grid-cols-4"
+                    >
+                      <Input
+                        value={lesson.title}
+                        onChange={(e) =>
+                          updateLesson(moduleIndex, lessonIndex, 'title', e.target.value)
+                        }
+                        placeholder="Название урока"
+                      />
+                      <Input
+                        value={lesson.duration}
+                        onChange={(e) =>
+                          updateLesson(moduleIndex, lessonIndex, 'duration', e.target.value)
+                        }
+                        placeholder="Длительность"
+                      />
+                      <Input
+                        value={lesson.video_url}
+                        onChange={(e) =>
+                          updateLesson(moduleIndex, lessonIndex, 'video_url', e.target.value)
+                        }
+                        placeholder="Ссылка на видео"
+                        className="sm:col-span-2"
+                      />
+                      <div className="flex items-center justify-between sm:col-span-4">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground">Порядок</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={lesson.order ?? lessonIndex + 1}
+                            onChange={(e) =>
+                              updateLesson(moduleIndex, lessonIndex, 'order', e.target.value)
+                            }
+                            className="w-20"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeLesson(moduleIndex, lessonIndex)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => addLesson(moduleIndex)}
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    Добавить урок
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-3 justify-end">

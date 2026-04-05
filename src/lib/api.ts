@@ -1,5 +1,6 @@
 import {
   ApiCourse,
+  CourseDeliveryMode,
   ProgressEntry,
   User,
   Purchase,
@@ -32,6 +33,8 @@ type AdminCoursePayload = {
   discount_price?: number | null;
   preview_image?: File | string | null;
   background_video_url?: string | null;
+  delivery_mode?: CourseDeliveryMode;
+  mentor_telegram_username?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
   is_featured?: boolean;

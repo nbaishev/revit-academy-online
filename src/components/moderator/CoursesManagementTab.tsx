@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit, Trash2, Eye, Loader2, Star, ImageIcon } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Loader2, Star, ImageIcon, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import {
@@ -56,7 +56,7 @@ export function CoursesManagementTab() {
     mutationFn: async (data: CourseFormValues) => {
       const { modules, ...coursePayload } = data;
       const newCourse = await api.adminCreateCourse(coursePayload);
-      if (modules.length) {
+      if (data.delivery_mode === 'online' && modules.length) {
         await syncModules(newCourse.id, modules);
       }
       return newCourse;
@@ -73,7 +73,7 @@ export function CoursesManagementTab() {
     mutationFn: async ({ id, data }: { id: string; data: CourseFormValues }) => {
       const { modules, ...coursePayload } = data;
       const updated = await api.adminUpdateCourse(id, coursePayload);
-      if (modules.length) {
+      if (data.delivery_mode === 'online' && modules.length) {
         await syncModules(id, modules);
       }
       return updated;
@@ -173,6 +173,7 @@ export function CoursesManagementTab() {
             <div className="space-y-4">
               {filteredCourses.map((course) => {
                 const isFree = course.is_free || course.price === null || course.price === undefined;
+                const isOffline = course.delivery_mode === 'offline';
                 const priceValue = typeof course.price === 'number' ? course.price : null;
                 const discountValue = typeof course.discount_price === 'number' ? course.discount_price : null;
                 const hasDiscount =
@@ -215,6 +216,11 @@ export function CoursesManagementTab() {
                           <Badge variant="secondary" className="bg-background/80">
                             {course.level}
                           </Badge>
+                          {isOffline && (
+                            <Badge className="bg-sky-500/10 text-sky-700 hover:bg-sky-500/10">
+                              Оффлайн
+                            </Badge>
+                          )}
                           {course.is_featured && (
                             <Badge className="bg-amber-500 text-white">
                               <Star className="mr-1 h-3 w-3" />
@@ -240,13 +246,22 @@ export function CoursesManagementTab() {
                           {course.description}
                         </p>
                         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>
-                            {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
-                          </span>
-                          <span>•</span>
-                          <span>
-                            {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
-                          </span>
+                          {isOffline ? (
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              Telegram запись к ментору
+                            </span>
+                          ) : (
+                            <>
+                              <span>
+                                {modulesCount} {pluralizeRu(modulesCount, ['модуль', 'модуля', 'модулей'])}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {lessonsCount} {pluralizeRu(lessonsCount, ['урок', 'урока', 'уроков'])}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

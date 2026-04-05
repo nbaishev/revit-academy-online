@@ -23,6 +23,8 @@ export interface ApiModule {
   lessons: ApiLesson[];
 }
 
+export type CourseDeliveryMode = 'online' | 'offline';
+
 export interface ApiCourse {
   id: string;
   title: string;
@@ -36,6 +38,8 @@ export interface ApiCourse {
   current_price?: number | null;
   preview_image?: string | null;
   background_video_url?: string | null;
+  delivery_mode: CourseDeliveryMode;
+  mentor_telegram_username?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
   is_featured?: boolean;
