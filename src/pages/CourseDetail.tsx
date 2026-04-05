@@ -168,14 +168,16 @@ const CourseDetail = () => {
     () => content?.modules?.flatMap((module) => module.lessons) ?? [],
     [content]
   );
+  const contentId = content?.id ?? null;
+  const lessonsTotal = useMemo(
+    () => content?.modules?.reduce((acc, module) => acc + (module.lessons?.length || 0), 0) ?? 0,
+    [content]
+  );
 
   useEffect(() => {
-    if (content) {
-      const lessonsTotal =
-        content.modules?.reduce((acc, module) => acc + (module.lessons?.length || 0), 0) ?? 0;
-      registerCourseLessonCount(content.id, lessonsTotal);
-    }
-  }, [content, registerCourseLessonCount]);
+    if (!contentId) return;
+    registerCourseLessonCount(contentId, lessonsTotal);
+  }, [contentId, lessonsTotal, registerCourseLessonCount]);
 
   useEffect(() => {
     if (!content || !course?.id || authLoading) return;

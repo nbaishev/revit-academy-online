@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
 import { api } from '@/lib/api';
 import { ApiCourse, ProgressEntry, User } from '@/lib/types';
 import { getGoogleAuthCode } from '@/lib/googleIdentity';
@@ -27,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lessonTotals, setLessonTotals] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const me = await api.getMe();
       setUser(me);
@@ -44,23 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const stored = api.loadTokens();
     if (stored) {
-      loadProfile();
+      void loadProfile();
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [loadProfile]);
 
-  const refreshMyCourses = async () => {
+  const refreshMyCourses = useCallback(async () => {
     const courses = await api.getMyCourses();
     setMyCourses(courses);
-  };
+  }, []);
 
-  const login = async (idToken?: string) => {
+  const login = useCallback(async (idToken?: string) => {
     setIsLoading(true);
     try {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -76,21 +84,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [refreshMyCourses]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     api.clearAuth();
     setUser(null);
     setMyCourses([]);
     setProgress([]);
-  };
+  }, []);
 
-  const hasAccessToCourse = (course: Pick<ApiCourse, 'id' | 'is_free'>) => {
+  const hasAccessToCourse = useCallback((course: Pick<ApiCourse, 'id' | 'is_free'>) => {
     if (course.is_free) return true;
     return myCourses.some((c) => c.id === course.id);
-  };
+  }, [myCourses]);
 
-  const markLessonComplete = async (courseId: string, lessonId: string) => {
+  const markLessonComplete = useCallback(async (courseId: string, lessonId: string) => {
     const entry = await api.completeLesson(courseId, lessonId);
     setProgress((prev) => {
       const existing = prev.find((p) => p.id === entry.id);
@@ -99,9 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, entry];
     });
-  };
+  }, []);
 
-  const markLessonViewed = async (courseId: string, lessonId: string) => {
+  const markLessonViewed = useCallback(async (courseId: string, lessonId: string) => {
     const entry = await api.viewLesson(courseId, lessonId);
     setProgress((prev) => {
       const existing = prev.find((p) => p.id === entry.id);
@@ -118,13 +126,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, entry];
     });
-  };
+  }, []);
 
-  const registerCourseLessonCount = (courseId: string, totalLessons: number) => {
-    setLessonTotals((prev) => ({ ...prev, [courseId]: totalLessons }));
-  };
+  const registerCourseLessonCount = useCallback((courseId: string, totalLessons: number) => {
+    setLessonTotals((prev) => {
+      if (prev[courseId] === totalLessons) {
+        return prev;
+      }
+      return { ...prev, [courseId]: totalLessons };
+    });
+  }, []);
 
-  const getCourseProgress = (courseId: string) => {
+  const getCourseProgress = useCallback((courseId: string) => {
     const registeredTotal = lessonTotals[courseId];
     const fallbackTotal = myCourses.find((course) => course.id === courseId)?.lessons_count ?? 0;
     const total = registeredTotal || fallbackTotal;
@@ -136,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     const completed = completedLessonIds.size;
     return Math.min(100, (completed / total) * 100);
-  };
+  }, [lessonTotals, myCourses, progress]);
 
   const value = useMemo(
     () => ({
@@ -153,7 +166,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registerCourseLessonCount,
       refreshMyCourses,
     }),
-    [user, isLoading, myCourses, progress, lessonTotals]
+    [
+      user,
+      isLoading,
+      myCourses,
+      progress,
+      login,
+      logout,
+      hasAccessToCourse,
+      markLessonComplete,
+      markLessonViewed,
+      getCourseProgress,
+      registerCourseLessonCount,
+      refreshMyCourses,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
