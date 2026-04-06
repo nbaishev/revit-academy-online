@@ -32,6 +32,16 @@ export function CoursesManagementTab() {
     queryFn: () => api.adminListCourses(),
   });
 
+  const {
+    data: editingCourseDetail,
+    isLoading: isEditingCourseLoading,
+    isError: isEditingCourseError,
+  } = useQuery<ApiCourse>({
+    queryKey: ['moderator-course', editingCourse?.id],
+    queryFn: () => api.adminGetCourse(editingCourse!.id),
+    enabled: Boolean(editingCourse?.id),
+  });
+
   const syncModules = async (courseId: string, modules: ModuleInput[]) => {
     for (const [moduleIndex, module] of modules.entries()) {
       if (!module.title.trim()) continue;
@@ -48,6 +58,16 @@ export function CoursesManagementTab() {
           video_url: lesson.video_url,
           duration: lesson.duration,
           order: lesson.order ?? lessonIndex + 1,
+          additional_materials: serializeLessonMaterials(lesson.materials),
+        });
+      }
+    }
+  };
+
+  const syncLessonMaterials = async (courseId: string, modules: ModuleInput[]) => {
+    for (const module of modules) {
+      for (const lesson of module.lessons) {
+        await api.adminUpdateLesson(courseId, lesson.id, {
           additional_materials: serializeLessonMaterials(lesson.materials),
         });
       }
@@ -76,7 +96,7 @@ export function CoursesManagementTab() {
       const { modules, ...coursePayload } = data;
       const updated = await api.adminUpdateCourse(id, coursePayload);
       if (data.delivery_mode === 'online' && modules.length) {
-        await syncModules(id, modules);
+        await syncLessonMaterials(id, modules);
       }
       return updated;
     },
@@ -84,6 +104,7 @@ export function CoursesManagementTab() {
       toast.success('Курс обновлен');
       setEditingCourse(null);
       queryClient.invalidateQueries({ queryKey: ['moderator-courses'] });
+      queryClient.invalidateQueries({ queryKey: ['moderator-course'] });
     },
     onError: (err: Error) => toast.error('Не удалось обновить курс', { description: err.message }),
   });
@@ -146,6 +167,7 @@ export function CoursesManagementTab() {
               <DialogDescription>Данные сохранятся в базе через API</DialogDescription>
             </DialogHeader>
             <CourseForm
+              mode="create"
               onSubmit={handleAddCourse}
               onCancel={() => setIsAddDialogOpen(false)}
             />
@@ -293,12 +315,24 @@ export function CoursesManagementTab() {
                               Обновление информации сохраняется через API
                             </DialogDescription>
                           </DialogHeader>
-                          <CourseForm
-                            key={course.id}
-                            course={course}
-                            onSubmit={handleEditCourse}
-                            onCancel={() => setEditingCourse(null)}
-                          />
+                          {isEditingCourseLoading ? (
+                            <div className="flex items-center gap-2 py-8 text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Загружаем уроки курса...
+                            </div>
+                          ) : isEditingCourseError || !editingCourseDetail ? (
+                            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                              Не удалось загрузить модули и уроки курса для редактирования.
+                            </div>
+                          ) : (
+                            <CourseForm
+                              key={editingCourseDetail.id}
+                              course={editingCourseDetail}
+                              mode="edit"
+                              onSubmit={handleEditCourse}
+                              onCancel={() => setEditingCourse(null)}
+                            />
+                          )}
                         </DialogContent>
                       </Dialog>
                       <Button

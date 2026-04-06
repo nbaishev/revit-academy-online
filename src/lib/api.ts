@@ -285,6 +285,9 @@ export const api = {
       body,
     });
   },
+  async adminGetCourse(id: string) {
+    return request<ApiCourse>(`/moderator/courses/${id}/`, { auth: true });
+  },
   async adminDeleteCourse(id: string) {
     return request<void>(`/moderator/courses/${id}/`, { method: 'DELETE', auth: true });
   },

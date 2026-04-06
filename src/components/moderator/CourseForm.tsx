@@ -68,6 +68,7 @@ export type CourseFormValues = {
 
 interface CourseFormProps {
   course?: ApiCourse;
+  mode?: 'create' | 'edit';
   onSubmit: (data: CourseFormValues) => void | Promise<void>;
   onCancel: () => void;
 }
@@ -102,7 +103,13 @@ const mapCourseModulesToInputs = (course?: ApiCourse): ModuleInput[] =>
     }),
   }));
 
-export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
+export function CourseForm({
+  course,
+  mode = course ? 'edit' : 'create',
+  onSubmit,
+  onCancel,
+}: CourseFormProps) {
+  const isStructureEditable = mode === 'create';
   const [title, setTitle] = useState(course?.title || '');
   const [description, setDescription] = useState(course?.description || '');
   const [fullDescription, setFullDescription] = useState(course?.full_description || '');
@@ -122,6 +129,21 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
     setPreviewImageFile(null);
     setPreviewImagePreview(course?.preview_image || '');
   }, [course?.id, course?.preview_image]);
+
+  useEffect(() => {
+    setTitle(course?.title || '');
+    setDescription(course?.description || '');
+    setFullDescription(course?.full_description || '');
+    setLevel((course?.level as CourseLevel) || 'Начинающий');
+    setDeliveryMode(course?.delivery_mode || 'online');
+    setMentorTelegramUsername(course?.mentor_telegram_username || '');
+    setIsFree(course?.is_free ?? true);
+    setPrice(course?.price?.toString() || '');
+    setDiscountPrice(course?.discount_price?.toString() || '');
+    setBackgroundVideoUrl(course?.background_video_url || '');
+    setIsFeatured(course?.is_featured ?? false);
+    setModules(mapCourseModulesToInputs(course));
+  }, [course]);
 
   useEffect(() => {
     if (!previewImageFile) return;
@@ -432,11 +454,20 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
       {deliveryMode === 'online' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label>Модули и уроки</Label>
-            <Button type="button" variant="ghost" size="sm" onClick={addModule}>
-              <Plus className="mr-1 h-4 w-4" />
-              Добавить модуль
-            </Button>
+            <div>
+              <Label>Модули и уроки</Label>
+              {!isStructureEditable && (
+                <p className="text-xs text-muted-foreground">
+                  Для существующих курсов здесь можно менять материалы уроков.
+                </p>
+              )}
+            </div>
+            {isStructureEditable && (
+              <Button type="button" variant="ghost" size="sm" onClick={addModule}>
+                <Plus className="mr-1 h-4 w-4" />
+                Добавить модуль
+              </Button>
+            )}
           </div>
           <div className="space-y-4">
             {modules.map((module, moduleIndex) => (
@@ -451,6 +482,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                       value={module.title}
                       onChange={(e) => updateModule(moduleIndex, 'title', e.target.value)}
                       placeholder="Название модуля"
+                      disabled={!isStructureEditable}
                     />
                   </div>
                   <div className="w-24 space-y-2">
@@ -460,17 +492,20 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                       min={1}
                       value={module.order ?? moduleIndex + 1}
                       onChange={(e) => updateModule(moduleIndex, 'order', e.target.value)}
+                      disabled={!isStructureEditable}
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="mt-6"
-                    onClick={() => removeModule(moduleIndex)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {isStructureEditable && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="mt-6"
+                      onClick={() => removeModule(moduleIndex)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 <div className="ml-4 space-y-2 border-l-2 border-border/50 pl-4">
@@ -486,6 +521,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                             updateLesson(moduleIndex, lessonIndex, 'title', e.target.value)
                           }
                           placeholder="Название урока"
+                          disabled={!isStructureEditable}
                         />
                         <Input
                           value={lesson.duration}
@@ -493,6 +529,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                             updateLesson(moduleIndex, lessonIndex, 'duration', e.target.value)
                           }
                           placeholder="Длительность"
+                          disabled={!isStructureEditable}
                         />
                         <Input
                           value={lesson.video_url}
@@ -501,6 +538,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                           }
                           placeholder="Ссылка на видео"
                           className="sm:col-span-2"
+                          disabled={!isStructureEditable}
                         />
                       </div>
                       <div className="rounded-lg border border-border/50 bg-background/70 p-3">
@@ -585,29 +623,34 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                               updateLesson(moduleIndex, lessonIndex, 'order', e.target.value)
                             }
                             className="w-20"
+                            disabled={!isStructureEditable}
                           />
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeLesson(moduleIndex, lessonIndex)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isStructureEditable && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeLesson(moduleIndex, lessonIndex)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => addLesson(moduleIndex)}
-                  >
-                    <Plus className="mr-1 h-4 w-4" />
-                    Добавить урок
-                  </Button>
+                  {isStructureEditable && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => addLesson(moduleIndex)}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Добавить урок
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
