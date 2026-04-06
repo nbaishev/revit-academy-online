@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
+import { formatLessonMaterialLink, parseLessonMaterials } from '@/lib/lessonMaterials';
 import { ApiCourse, FreeCourseBenefitStatus } from '@/lib/types';
 import { pluralizeRu } from '@/lib/utils';
 
@@ -271,18 +272,13 @@ const CourseDetail = () => {
     selectedLessonIndex >= 0 && selectedLessonIndex < lessons.length - 1
       ? lessons[selectedLessonIndex + 1]
       : null;
-  const lessonMaterialsUrl = useMemo(() => {
-    if (!selectedLessonData) return '';
-    const lesson = selectedLessonData as {
-      additional_materials?: string | null;
-      additional_materials_url?: string | null;
-      materials_url?: string | null;
-    };
-    return (
-      lesson.additional_materials ??
-      lesson.additional_materials_url ??
-      lesson.materials_url ??
-      ''
+  const lessonMaterials = useMemo(() => {
+    if (!selectedLessonData) return [];
+    return parseLessonMaterials(
+      selectedLessonData.additional_materials ??
+        selectedLessonData.additional_materials_url ??
+        selectedLessonData.materials_url ??
+        ''
     );
   }, [selectedLessonData]);
   const rawVideoUrl =
@@ -298,8 +294,6 @@ const CourseDetail = () => {
       navigate(`/courses/${courseId}/lessons/${lessonId}`);
     }
   };
-
-  const normalizedMaterialsLink = (lessonMaterialsUrl ?? '').trim();
 
   const handlePurchase = async () => {
     if (!courseId || course?.published === false) return;
@@ -551,17 +545,33 @@ const CourseDetail = () => {
                           <div className="mb-2 text-sm font-medium">
                             Дополнительные материалы
                           </div>
-                          <div className="flex items-center gap-2">
-                            {normalizedMaterialsLink ? (
-                              <Button asChild variant="outline" size="sm">
-                                <a
-                                  href={normalizedMaterialsLink}
-                                  target="_blank"
-                                  rel="noreferrer"
+                          <div className="space-y-3">
+                            {lessonMaterials.length ? (
+                              lessonMaterials.map((material, index) => (
+                                <div
+                                  key={`${material.href || material.description}-${index}`}
+                                  className="rounded-md border border-border/60 bg-muted/30 p-3"
                                 >
-                                  Открыть
-                                </a>
-                              </Button>
+                                  <p className="text-sm text-foreground">
+                                    {material.description || 'Ссылка на материал'}
+                                  </p>
+                                  {material.href ? (
+                                    <a
+                                      href={material.href}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title={material.href}
+                                      className="mt-1 inline-block max-w-full break-words text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                                    >
+                                      {formatLessonMaterialLink(material.href)}
+                                    </a>
+                                  ) : (
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                      Ссылка не указана
+                                    </p>
+                                  )}
+                                </div>
+                              ))
                             ) : (
                               <span className="text-sm text-muted-foreground">
                                 Материалы недоступны

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { CourseForm, CourseFormValues, ModuleInput } from './CourseForm';
 import { api } from '@/lib/api';
+import { serializeLessonMaterials } from '@/lib/lessonMaterials';
 import { ApiCourse } from '@/lib/types';
 import { pluralizeRu } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ export function CoursesManagementTab() {
           video_url: lesson.video_url,
           duration: lesson.duration,
           order: lesson.order ?? lessonIndex + 1,
+          additional_materials: serializeLessonMaterials(lesson.materials),
         });
       }
     }

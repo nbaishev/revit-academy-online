@@ -14,6 +14,8 @@ export interface ApiLesson {
   duration?: string;
   video_url?: string;
   additional_materials?: string | null;
+  additional_materials_url?: string | null;
+  materials_url?: string | null;
 }
 
 export interface ApiModule {

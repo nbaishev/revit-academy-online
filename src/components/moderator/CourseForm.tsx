@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ApiCourse, CourseDeliveryMode } from '@/lib/types';
+import { parseLessonMaterials } from '@/lib/lessonMaterials';
 import { Plus, Trash2, ImageIcon } from 'lucide-react';
 
 type CourseLevel = 'Начинающий' | 'Средний' | 'Продвинутый';
@@ -24,12 +25,22 @@ const normalizeTelegramUsername = (value: string) =>
     .replace(/^@+/, '')
     .replace(/\/+$/, '');
 
+const createLocalId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+export type LessonMaterialInput = {
+  id: string;
+  description: string;
+  href: string;
+};
+
 export type LessonInput = {
   id: string;
   title: string;
   duration?: string;
   video_url: string;
   order?: number;
+  materials: LessonMaterialInput[];
 };
 
 export type ModuleInput = {
@@ -61,6 +72,36 @@ interface CourseFormProps {
   onCancel: () => void;
 }
 
+const mapCourseModulesToInputs = (course?: ApiCourse): ModuleInput[] =>
+  (course?.modules ?? []).map((module, moduleIndex) => ({
+    id: String(module.id),
+    title: module.title,
+    order: module.order ?? moduleIndex + 1,
+    lessons: (module.lessons ?? []).map((lesson, lessonIndex) => {
+      const materials = parseLessonMaterials(
+        lesson.additional_materials ??
+          lesson.additional_materials_url ??
+          lesson.materials_url ??
+          ''
+      );
+
+      return {
+        id: String(lesson.id),
+        title: lesson.title,
+        duration: lesson.duration ?? '',
+        video_url: lesson.video_url ?? '',
+        order: lesson.order ?? lessonIndex + 1,
+        materials: materials.length
+          ? materials.map((material, materialIndex) => ({
+              id: createLocalId(`material-${moduleIndex}-${lessonIndex}-${materialIndex}`),
+              description: material.description,
+              href: material.href,
+            }))
+          : [],
+      };
+    }),
+  }));
+
 export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const [title, setTitle] = useState(course?.title || '');
   const [description, setDescription] = useState(course?.description || '');
@@ -75,7 +116,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const [previewImagePreview, setPreviewImagePreview] = useState(course?.preview_image || '');
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState(course?.background_video_url || '');
   const [isFeatured, setIsFeatured] = useState(course?.is_featured ?? false);
-  const [modules, setModules] = useState<ModuleInput[]>([]);
+  const [modules, setModules] = useState<ModuleInput[]>(() => mapCourseModulesToInputs(course));
 
   useEffect(() => {
     setPreviewImageFile(null);
@@ -126,7 +167,7 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
     setModules([
       ...modules,
       {
-        id: `module-${Date.now()}`,
+        id: createLocalId('module'),
         title: '',
         order: modules.length + 1,
         lessons: [],
@@ -147,11 +188,12 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const addLesson = (moduleIndex: number) => {
     const updated = [...modules];
     const newLesson: LessonInput = {
-      id: `lesson-${Date.now()}`,
+      id: createLocalId('lesson'),
       title: '',
       duration: '',
       video_url: '',
       order: (modules[moduleIndex]?.lessons?.length || 0) + 1,
+      materials: [],
     };
     updated[moduleIndex].lessons.push(newLesson);
     setModules(updated);
@@ -175,6 +217,44 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
   const removeLesson = (moduleIndex: number, lessonIndex: number) => {
     const updated = [...modules];
     updated[moduleIndex].lessons = updated[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
+    setModules(updated);
+  };
+
+  const addLessonMaterial = (moduleIndex: number, lessonIndex: number) => {
+    const updated = [...modules];
+    const lesson = updated[moduleIndex].lessons[lessonIndex];
+    lesson.materials = [
+      ...(lesson.materials ?? []),
+      { id: createLocalId('material'), description: '', href: '' },
+    ];
+    setModules(updated);
+  };
+
+  const updateLessonMaterial = (
+    moduleIndex: number,
+    lessonIndex: number,
+    materialIndex: number,
+    field: keyof LessonMaterialInput,
+    value: string
+  ) => {
+    const updated = [...modules];
+    const material = updated[moduleIndex].lessons[lessonIndex].materials[materialIndex];
+    updated[moduleIndex].lessons[lessonIndex].materials[materialIndex] = {
+      ...material,
+      [field]: value,
+    };
+    setModules(updated);
+  };
+
+  const removeLessonMaterial = (
+    moduleIndex: number,
+    lessonIndex: number,
+    materialIndex: number
+  ) => {
+    const updated = [...modules];
+    updated[moduleIndex].lessons[lessonIndex].materials = updated[moduleIndex].lessons[
+      lessonIndex
+    ].materials.filter((_, index) => index !== materialIndex);
     setModules(updated);
   };
 
@@ -397,31 +477,104 @@ export function CourseForm({ course, onSubmit, onCancel }: CourseFormProps) {
                   {module.lessons.map((lesson, lessonIndex) => (
                     <div
                       key={lesson.id}
-                      className="grid gap-2 rounded-lg bg-muted/30 p-3 sm:grid-cols-4"
+                      className="space-y-3 rounded-lg bg-muted/30 p-3"
                     >
-                      <Input
-                        value={lesson.title}
-                        onChange={(e) =>
-                          updateLesson(moduleIndex, lessonIndex, 'title', e.target.value)
-                        }
-                        placeholder="Название урока"
-                      />
-                      <Input
-                        value={lesson.duration}
-                        onChange={(e) =>
-                          updateLesson(moduleIndex, lessonIndex, 'duration', e.target.value)
-                        }
-                        placeholder="Длительность"
-                      />
-                      <Input
-                        value={lesson.video_url}
-                        onChange={(e) =>
-                          updateLesson(moduleIndex, lessonIndex, 'video_url', e.target.value)
-                        }
-                        placeholder="Ссылка на видео"
-                        className="sm:col-span-2"
-                      />
-                      <div className="flex items-center justify-between sm:col-span-4">
+                      <div className="grid gap-2 sm:grid-cols-4">
+                        <Input
+                          value={lesson.title}
+                          onChange={(e) =>
+                            updateLesson(moduleIndex, lessonIndex, 'title', e.target.value)
+                          }
+                          placeholder="Название урока"
+                        />
+                        <Input
+                          value={lesson.duration}
+                          onChange={(e) =>
+                            updateLesson(moduleIndex, lessonIndex, 'duration', e.target.value)
+                          }
+                          placeholder="Длительность"
+                        />
+                        <Input
+                          value={lesson.video_url}
+                          onChange={(e) =>
+                            updateLesson(moduleIndex, lessonIndex, 'video_url', e.target.value)
+                          }
+                          placeholder="Ссылка на видео"
+                          className="sm:col-span-2"
+                        />
+                      </div>
+                      <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">
+                              Дополнительные материалы
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Для каждого материала укажите описание и ссылку.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => addLessonMaterial(moduleIndex, lessonIndex)}
+                          >
+                            <Plus className="mr-1 h-4 w-4" />
+                            Добавить ссылку
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {lesson.materials.map((material, materialIndex) => (
+                            <div
+                              key={material.id}
+                              className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                            >
+                              <Input
+                                value={material.description}
+                                onChange={(e) =>
+                                  updateLessonMaterial(
+                                    moduleIndex,
+                                    lessonIndex,
+                                    materialIndex,
+                                    'description',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Описание ссылки"
+                              />
+                              <Input
+                                value={material.href}
+                                onChange={(e) =>
+                                  updateLessonMaterial(
+                                    moduleIndex,
+                                    lessonIndex,
+                                    materialIndex,
+                                    'href',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="https://..."
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  removeLessonMaterial(moduleIndex, lessonIndex, materialIndex)
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          {lesson.materials.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Пока нет материалов для этого урока.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Label className="text-xs text-muted-foreground">Порядок</Label>
                           <Input
