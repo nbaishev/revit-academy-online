@@ -18,7 +18,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
-              Образовательная платформа для изучения индустрии BIM-проектирования
+              SaaS-платформа для внедрения BIM и совместной работы проектных команд.
             </p>
           </div>
 

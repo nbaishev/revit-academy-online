@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ApiCourse } from '@/lib/types';
 import { BookOpen, Coins, Layers, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn, pluralizeRu } from '@/lib/utils';
+import { cn, formatUsd, pluralizeRu } from '@/lib/utils';
 
 interface CourseCardProps {
   course: ApiCourse;
@@ -31,9 +31,8 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
     priceValue !== null &&
     currentPriceValue !== null &&
     currentPriceValue < priceValue;
-  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
-  const currentPriceLabel =
-    currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
+  const priceLabel = priceValue !== null ? formatUsd(priceValue) : '';
+  const currentPriceLabel = currentPriceValue !== null ? formatUsd(currentPriceValue) : '';
   const effectivePriceLabel = currentPriceLabel || priceLabel;
   const isPublished = course.published ?? true;
 
@@ -70,10 +69,10 @@ export function CourseCard({ course, className = '' }: CourseCardProps) {
             ) : hasDiscount ? (
               <span className="flex items-baseline gap-2">
                 <span className="text-xs line-through opacity-70">{priceLabel}</span>
-                <span className="font-semibold">{currentPriceLabel} сом</span>
+                <span className="font-semibold">{currentPriceLabel}</span>
               </span>
             ) : (
-              `${effectivePriceLabel} сом`
+              effectivePriceLabel
             )}
           </Badge>
         </div>

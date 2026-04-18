@@ -18,8 +18,8 @@ const features = [
   },
   {
     icon: Award,
-    title: 'Сертификат',
-    description: 'Получите сертификат о прохождении курса',
+    title: 'SaaS доступ',
+    description: 'Онлайн инфраструктура для совместной работы в BIM',
   },
   {
     icon: Users,
@@ -42,7 +42,7 @@ export function FeaturesSection() {
             Почему выбирают <span className="inline-block rounded-lg bg-blue-600 px-3 py-1 font-bold text-white shadow-lg">UstaBIM</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Мы создали платформу, которая делает обучение Revit простым и эффективным
+            Мы создали платформу, которая делает внедрение BIM простым и эффективным
           </p>
         </div>
 

@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
 import { formatLessonMaterialLink, parseLessonMaterials } from '@/lib/lessonMaterials';
 import { ApiCourse, FreeCourseBenefitStatus } from '@/lib/types';
-import { pluralizeRu } from '@/lib/utils';
+import { formatUsd, pluralizeRu } from '@/lib/utils';
 
 type VideoSource = { type: 'iframe'; src: string } | { type: 'file'; src: string };
 
@@ -356,8 +356,8 @@ const CourseDetail = () => {
     priceValue !== null &&
     currentPriceValue !== null &&
     currentPriceValue < priceValue;
-  const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
-  const currentPriceLabel = currentPriceValue !== null ? currentPriceValue.toLocaleString('ru-RU') : '';
+  const priceLabel = priceValue !== null ? formatUsd(priceValue) : '';
+  const currentPriceLabel = currentPriceValue !== null ? formatUsd(currentPriceValue) : '';
   const effectivePriceLabel = currentPriceLabel || priceLabel;
   const courseProgress = getCourseProgress(course.id);
   const freeCourseBenefitConfigured = Boolean(
@@ -764,15 +764,11 @@ const CourseDetail = () => {
                     <div className="text-3xl font-bold text-green-500">Бесплатно</div>
                   ) : hasDiscount ? (
                     <div className="flex items-baseline justify-center gap-3">
-                      <span className="text-lg line-through text-muted-foreground">
-                        {priceLabel} сом
-                      </span>
-                      <span className="text-3xl font-bold">{currentPriceLabel} сом</span>
+                      <span className="text-lg line-through text-muted-foreground">{priceLabel}</span>
+                      <span className="text-3xl font-bold">{currentPriceLabel}</span>
                     </div>
                   ) : (
-                    <div className="text-3xl font-bold">
-                      {effectivePriceLabel} сом
-                    </div>
+                    <div className="text-3xl font-bold">{effectivePriceLabel}</div>
                   )}
                 </div>
 

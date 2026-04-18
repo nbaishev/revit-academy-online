@@ -18,7 +18,7 @@ import { CourseForm, CourseFormValues, ModuleInput } from './CourseForm';
 import { api } from '@/lib/api';
 import { serializeLessonMaterials } from '@/lib/lessonMaterials';
 import { ApiCourse } from '@/lib/types';
-import { pluralizeRu } from '@/lib/utils';
+import { formatUsd, pluralizeRu } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function CoursesManagementTab() {
@@ -206,8 +206,8 @@ export function CoursesManagementTab() {
                   discountValue !== null &&
                   discountValue > 0 &&
                   discountValue < priceValue;
-                const priceLabel = priceValue !== null ? priceValue.toLocaleString('ru-RU') : '';
-                const discountLabel = discountValue !== null ? discountValue.toLocaleString('ru-RU') : '';
+                const priceLabel = priceValue !== null ? formatUsd(priceValue) : '';
+                const discountLabel = discountValue !== null ? formatUsd(discountValue) : '';
                 const lessonsCount = course.lessons_count ?? 0;
                 const modulesCount = course.modules_count ?? 0;
                 return (
@@ -258,12 +258,10 @@ export function CoursesManagementTab() {
                           ) : hasDiscount ? (
                             <Badge variant="secondary" className="flex items-baseline gap-2">
                               <span className="line-through text-muted-foreground">{priceLabel}</span>
-                              <span className="font-semibold">{discountLabel} сом</span>
+                              <span className="font-semibold">{discountLabel}</span>
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">
-                              {priceLabel} сом
-                            </Badge>
+                            <Badge variant="secondary">{priceLabel}</Badge>
                           )}
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-1">

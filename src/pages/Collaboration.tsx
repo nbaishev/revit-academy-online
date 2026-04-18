@@ -128,25 +128,25 @@ const features = [
   {
     icon: Cloud,
     title: 'Уменьшение ошибок',
-    description: 'Работа в единой среде позволяет выявлять коллизии на раннем этапе.',
+    description: 'Работа в одной BIM-модели позволяет выявлять коллизии на раннем этапе и снижает количество ошибок в проектах до 30%.',
   },
   {
     icon: HardDrive,
     title: 'Повышение эффективности команды',
     description:
-      'Комментарии прямо в модели, нет бесконечных PDF/WhatsApp правок.',
+      'Вся работа и комментарии ведутся прямо в модели — без PDF, WhatsApp и потери правок между участниками',
   },
   {
     icon: Server,
     title: 'Контроль данных',
     description:
-      'История изменений и контроль версий, видно кто и когда изменил.',
+      'История изменений, контроль версий и доступов — всегда видно, кто и когда вносил изменения.',
   },
   {
     icon: Clock,
     title: 'Ускорение работы',
     description:
-      'Меньше ошибок - меньше переделок.',
+      'Меньше переделок — быстрее сдача проектов, снижение затрат и рост прибыли компании.',
   },
 ];
 
@@ -262,7 +262,7 @@ export default function Collaboration() {
             <div className="text-center lg:text-left">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
                 <Server className="h-4 w-4" />
-                Совместная работа для BIM-команд
+                SaaS-платформа для внедрения BIM и совместной работы проектных команд
               </div>
               <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
                 Совместная BIM работа{' '}

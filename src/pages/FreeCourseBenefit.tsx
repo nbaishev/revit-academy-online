@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { ApiCourse, FreeCourseBenefitStatus } from '@/lib/types';
+import { formatUsd } from '@/lib/utils';
 
 const FreeCourseBenefit = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -178,7 +179,7 @@ const FreeCourseBenefit = () => {
                       <CardContent className="space-y-3">
                         <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
                         <p className="text-sm">
-                          Текущая цена: <span className="font-medium">{price.toLocaleString('ru-RU')} сом</span>
+                          Текущая цена: <span className="font-medium">{formatUsd(price)}</span>
                         </p>
                         <Button
                           className="w-full"

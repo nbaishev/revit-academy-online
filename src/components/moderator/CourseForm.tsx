@@ -362,11 +362,12 @@ export function CourseForm({
         {!isFree && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Цена (сом)</Label>
+              <Label htmlFor="price">Цена (USD)</Label>
               <Input
                 id="price"
                 type="number"
                 min="0"
+                step="1"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="Введите цену курса"
@@ -374,17 +375,18 @@ export function CourseForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="discountPrice">Цена со скидкой (сом)</Label>
+              <Label htmlFor="discountPrice">Цена со скидкой (USD)</Label>
               <Input
                 id="discountPrice"
                 type="number"
                 min="0"
+                step="1"
                 value={discountPrice}
                 onChange={(e) => setDiscountPrice(e.target.value)}
                 placeholder="Введите цену со скидкой"
               />
               <p className="text-xs text-muted-foreground">
-                Оставьте пустым, если скидки нет.
+                Оставьте пустым, если скидки нет. В Finik сумма пересчитывается в сомы автоматически по курсу 87.5.
               </p>
             </div>
           </div>

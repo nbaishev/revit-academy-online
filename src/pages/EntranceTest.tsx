@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { ApiCourse, EntranceQuizStartResponse, EntranceQuizStatus, EntranceQuizSubmitResponse } from '@/lib/types';
+import { formatUsd } from '@/lib/utils';
 
 const EntranceTest = () => {
   const location = useLocation();
@@ -275,7 +276,7 @@ const EntranceTest = () => {
                       <CardContent className="space-y-3">
                         <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
                         <p className="text-sm">
-                          Текущая цена: <span className="font-medium">{displayedPrice.toLocaleString('ru-RU')} сом</span>
+                          Текущая цена: <span className="font-medium">{formatUsd(displayedPrice)}</span>
                         </p>
                         <Button
                           className="w-full"

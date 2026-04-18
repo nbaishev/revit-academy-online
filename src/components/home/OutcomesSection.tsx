@@ -16,7 +16,7 @@ export function OutcomesSection() {
             Cделайте шаг навстречу успеху
           </h2>
           <p className="text-xl font-semibold italic text-primary">
-            Пройдя курсы, вы сможете:
+            Для студентов и молодых специалистов шанс:
           </p>
         </div>
 

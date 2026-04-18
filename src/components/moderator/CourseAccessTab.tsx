@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import { api } from '@/lib/api';
 import { ApiCourse, ModeratorUserSummary } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, formatUsd } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   AlertDialog,
@@ -47,7 +47,7 @@ const getCoursePriceLabel = (course: ApiCourse) => {
         : typeof course.price === 'number'
           ? course.price
           : null;
-  return price === null ? 'Цена не указана' : `${price.toLocaleString('ru-RU')} сом`;
+  return price === null ? 'Цена не указана' : formatUsd(price);
 };
 
 export function CourseAccessTab() {

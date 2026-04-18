@@ -12,12 +12,13 @@ export function HeroSection() {
     queryFn: () => api.getPublicStats(),
     staleTime: 5 * 60 * 1000,
   });
+  const supportedMarkets = ['KZ', 'KG', 'UZ', 'TJ'];
 
   const studentsCount = publicStats?.total_users;
   const studentsLabel =
     typeof studentsCount === 'number'
-      ? `${studentsCount.toLocaleString('ru-RU')} ${pluralizeRu(studentsCount, ['студент', 'студента', 'студентов'])}`
-      : '... студентов';
+      ? `${studentsCount.toLocaleString('ru-RU')} ${pluralizeRu(studentsCount, ['инженер', 'инженера', 'инженеров'])}`
+      : '... инженеров';
 
   return (
     <section className="relative overflow-hidden gradient-hero">
@@ -36,82 +37,54 @@ export function HeroSection() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
               </span>
-              На платформе уже {studentsLabel}
+              {studentsLabel} уже используют платформу UstaBIM
             </div>
 
             <h1 className="mb-6 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-              Онлайн{' '}
+              Переход{' '}
               <span className="inline-block rounded-lg bg-blue-600 px-3 py-1 font-bold text-white shadow-lg">
-                BIM платформа
+                на BIM от 30 дней
               </span>
               <br />
-              нового поколения
+              для проектных компаний
             </h1>
 
             <p className="mb-8 max-w-lg text-lg text-muted-foreground md:text-xl">
-              Профессиональные курсы по BIM-проектированию. 
-              Учитесь в удобном темпе с практическими заданиями и поддержкой экспертов.
+              С 2026 года BIM становится обязательным в ряде стран Центральной Азии. 
+              Компании без BIM теряют тендеры и до 40% выручки.
+              UstaBIM — SaaS-платформа для внедрения BIM и совместной работы проектных команд 
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline-primary" size="xl">
+                <Link to="/courses/">
+                  <Play className="mr-2 h-5 w-5" />
+                  Внедрить BIM
+                </Link>
+              </Button>
               <Button
-                  asChild
-                  variant="default"
-                  size="xl"
-                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+                asChild
+                variant="default"
+                size="xl"
+                className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
+              >
+                <Link to="/entrance-test">
+                  Получить скидку
+                </Link>
+              </Button>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {supportedMarkets.map((market) => (
+                <div
+                  key={market}
+                  title={market}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/15 bg-card/85 text-sm font-semibold tracking-[0.18em] text-primary shadow-sm backdrop-blur-sm"
                 >
-                  <Link to="/courses/1">
-                    АР
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="default"
-                  size="xl"
-                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
-                >
-                  <Link to="/courses/6">
-                    КР
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="default"
-                  size="xl"
-                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
-                >
-                  <Link to="/courses/4">
-                    ОВиК
-                  </Link>
-                </Button><Button
-                  asChild
-                  variant="default"
-                  size="xl"
-                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
-                >
-                  <Link to="/courses/5">
-                    ВК
-                  </Link>
-                </Button>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline-primary" size="xl">
-                  <Link to="/courses/2">
-                    <Play className="mr-2 h-5 w-5" />
-                    Начните сегодня
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="default"
-                  size="xl"
-                  className="shadow-lg shadow-primary/25 ring-2 ring-primary/20"
-                >
-                  <Link to="/entrance-test">
-                    Получить скидку
-                  </Link>
-                </Button>
-              </div>
+                  {market}
+                </div>
+              ))}
             </div>
           </div>
 

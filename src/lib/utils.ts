@@ -20,3 +20,7 @@ export function pluralizeRu(count: number, forms: [string, string, string]) {
   }
   return forms[2];
 }
+
+export function formatUsd(amount: number) {
+  return `$${amount.toLocaleString('ru-RU')}`;
+}

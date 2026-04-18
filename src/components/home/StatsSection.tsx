@@ -10,10 +10,10 @@ export function StatsSection() {
   });
 
   const stats = [
-    { value: publicStats?.total_users?.toLocaleString('ru-RU') ?? '...', label: 'Студентов' },
-    { value: '6', label: 'Курсов' },
-    { value: '310+', label: 'Видеоуроков' },
-    { value: '4.8', label: 'Средний рейтинг' },
+    { value: publicStats?.total_users?.toLocaleString('ru-RU') ?? '...', label: 'пользователей платформы' },
+    { value: '5+', label: 'компаний внедрили BIM' },
+    { value: '480+', label: 'уроков на платформе' },
+    { value: '5', label: 'работающих BIM серверов (CDE)' },
   ];
 
   return (
