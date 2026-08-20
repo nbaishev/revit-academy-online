@@ -454,7 +454,7 @@ const CourseDetail = () => {
   if (user && hasAccess && content) {
     return (
       <Layout>
-        <div className="flex h-full min-h-0 flex-col lg:flex-row">
+        <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col lg:flex-row">
           {/* Video Area */}
           <div className="flex-1 min-h-0 bg-foreground/5">
             <div className="flex h-full min-h-0 flex-col">
@@ -599,7 +599,7 @@ const CourseDetail = () => {
 
           {/* Sidebar */}
           {isSidebarOpen && (
-            <div className="w-full border-l border-border bg-card lg:w-96">
+            <div className="flex h-full min-h-0 w-full flex-col border-l border-border bg-card lg:w-96">
               <div className="border-b border-border p-4">
                 <Link
                   to="/courses"
@@ -635,7 +635,7 @@ const CourseDetail = () => {
                 )}
               </div>
 
-              <div className="h-[calc(100%-140px)] overflow-auto">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <Accordion
                   type="multiple"
                   className="w-full"
