@@ -237,6 +237,9 @@ export function CoursesManagementTab() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="font-medium">{course.title}</h4>
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Порядок: {course.sort_order ?? 0}
+                          </Badge>
                           <Badge variant="secondary" className="bg-background/80">
                             {course.level}
                           </Badge>

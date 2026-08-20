@@ -38,6 +38,7 @@ type AdminCoursePayload = {
   seo_title?: string | null;
   seo_description?: string | null;
   is_featured?: boolean;
+  sort_order?: number;
 };
 
 let tokens: AuthTokens | null = loadStoredTokens();

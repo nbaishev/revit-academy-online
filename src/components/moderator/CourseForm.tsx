@@ -63,6 +63,7 @@ export type CourseFormValues = {
   preview_image?: File | null;
   background_video_url?: string;
   is_featured?: boolean;
+  sort_order?: number;
   modules: ModuleInput[];
 };
 
@@ -123,6 +124,7 @@ export function CourseForm({
   const [previewImagePreview, setPreviewImagePreview] = useState(course?.preview_image || '');
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState(course?.background_video_url || '');
   const [isFeatured, setIsFeatured] = useState(course?.is_featured ?? false);
+  const [sortOrder, setSortOrder] = useState(course?.sort_order?.toString() ?? '0');
   const [modules, setModules] = useState<ModuleInput[]>(() => mapCourseModulesToInputs(course));
 
   useEffect(() => {
@@ -142,6 +144,7 @@ export function CourseForm({
     setDiscountPrice(course?.discount_price?.toString() || '');
     setBackgroundVideoUrl(course?.background_video_url || '');
     setIsFeatured(course?.is_featured ?? false);
+    setSortOrder(course?.sort_order?.toString() ?? '0');
     setModules(mapCourseModulesToInputs(course));
   }, [course]);
 
@@ -179,6 +182,7 @@ export function CourseForm({
       preview_image: previewImageFile || undefined,
       background_video_url: backgroundVideoUrl || undefined,
       is_featured: isFeatured,
+      sort_order: parseOrder(sortOrder) ?? 0,
       modules: deliveryMode === 'offline' ? [] : modules,
     };
 
@@ -449,6 +453,21 @@ export function CourseForm({
             <p className="text-sm text-muted-foreground">Будет отображаться в подборках</p>
           </div>
           <Switch id="isFeatured" checked={isFeatured} onCheckedChange={setIsFeatured} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sortOrder">Порядок сортировки</Label>
+          <Input
+            id="sortOrder"
+            type="number"
+            step="1"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            placeholder="0"
+          />
+          <p className="text-xs text-muted-foreground">
+            Определяет расположение курса на странице курсов: чем меньше число, тем выше курс в списке.
+          </p>
         </div>
       </div>
 

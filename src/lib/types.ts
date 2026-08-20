@@ -45,6 +45,7 @@ export interface ApiCourse {
   seo_title?: string | null;
   seo_description?: string | null;
   is_featured?: boolean;
+  sort_order?: number;
   lessons_count?: number;
   modules_count?: number;
   modules?: ApiModule[];
