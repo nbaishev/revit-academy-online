@@ -467,9 +467,9 @@ const CourseDetail = () => {
                   {isSidebarOpen ? 'Скрыть список' : 'Показать список'}
                 </Button>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-h-0">
                 {selectedLessonData ? (
-                  <div className="flex h-full flex-col">
+                  <div className="flex h-full min-h-0 flex-col">
                     {/* Video Player */}
                     <div className="px-4 pt-4 sm:px-6 lg:px-10 xl:px-16">
                       <div className="relative mx-auto aspect-video w-full max-w-6xl bg-foreground">
