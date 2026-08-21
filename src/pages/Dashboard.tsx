@@ -103,9 +103,11 @@ const Dashboard = () => {
 
                         <div className="flex flex-1 flex-col p-6">
                           <div className="mb-2 flex items-start justify-between">
-                            <h3 className="text-xl font-semibold group-hover:text-primary">
-                              {course.title}
-                            </h3>
+                            <Link to={`/courses/${course.id}`}>
+                              <h3 className="text-xl font-semibold group-hover:text-primary">
+                                {course.title}
+                              </h3>
+                            </Link>
                             {course.is_free && (
                               <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500">
                                 Бесплатно

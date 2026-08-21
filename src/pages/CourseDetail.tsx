@@ -454,7 +454,7 @@ const CourseDetail = () => {
   if (user && hasAccess && content) {
     return (
       <Layout>
-        <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col lg:flex-row">
+        <div className="flex flex-col lg:h-[calc(100vh-4rem)] lg:min-h-0 lg:flex-row">
           {/* Video Area */}
           <div className="flex-1 min-h-0 bg-foreground/5">
             <div className="flex h-full min-h-0 flex-col">
@@ -599,7 +599,7 @@ const CourseDetail = () => {
 
           {/* Sidebar */}
           {isSidebarOpen && (
-            <div className="flex h-full min-h-0 w-full flex-col border-l border-border bg-card lg:w-96">
+            <div className="flex w-full flex-col border-l border-border bg-card lg:h-full lg:min-h-0 lg:w-96">
               <div className="border-b border-border p-4">
                 <Link
                   to="/courses"
