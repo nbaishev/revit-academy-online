@@ -469,9 +469,9 @@ const CourseDetail = () => {
               </div>
               <div className="flex-1 min-h-0">
                 {selectedLessonData ? (
-                  <div className="flex h-full min-h-0 flex-col">
+                  <div className="flex h-full min-h-0 flex-col items-center justify-center">
                     {/* Video Player */}
-                    <div className="px-4 pt-4 sm:px-6 lg:px-10 xl:px-16">
+                    <div className="w-full px-4 py-4 sm:px-6 lg:px-10 xl:px-16">
                       <div className="relative mx-auto aspect-video w-full max-w-6xl bg-foreground">
                         {videoSource ? (
                           videoSource.type === 'file' ? (
@@ -498,87 +498,6 @@ const CourseDetail = () => {
                             </div>
                           </div>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Lesson Info */}
-                    <div className="flex-1 overflow-auto p-6">
-                      <h1 className="mb-2 text-2xl font-bold">{selectedLessonData.title}</h1>
-                      <div className="mb-4 flex items-center gap-4 text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {selectedLessonData.duration}
-                        </span>
-                      </div>
-                      <Button
-                        onClick={() => markLessonComplete(course.id, selectedLessonData.id)}
-                        variant={isSelectedCompleted ? 'secondary' : 'default'}
-                        disabled={isSelectedCompleted}
-                      >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        {isSelectedCompleted ? 'Просмотрено' : 'Отметить как просмотренный'}
-                      </Button>
-                      <div className="mt-6 flex flex-col gap-4">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={!previousLesson}
-                            onClick={() =>
-                              previousLesson && handleLessonSelect(String(previousLesson.id))
-                            }
-                          >
-                            Предыдущий урок
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={!nextLesson}
-                            onClick={() => nextLesson && handleLessonSelect(String(nextLesson.id))}
-                          >
-                            Следующий урок
-                          </Button>
-                        </div>
-                        <div className="rounded-lg border border-border bg-card p-4">
-                          <div className="mb-2 text-sm font-medium">
-                            Дополнительные материалы
-                          </div>
-                          <div className="space-y-3">
-                            {lessonMaterials.length ? (
-                              lessonMaterials.map((material, index) => (
-                                <div
-                                  key={`${material.href || material.description}-${index}`}
-                                  className="rounded-md border border-border/60 bg-muted/30 p-3"
-                                >
-                                  <p className="text-sm text-foreground">
-                                    {material.description || 'Ссылка на материал'}
-                                  </p>
-                                  {material.href ? (
-                                    <a
-                                      href={material.href}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title={material.href}
-                                      className="mt-1 inline-block max-w-full break-words text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80"
-                                    >
-                                      {formatLessonMaterialLink(material.href)}
-                                    </a>
-                                  ) : (
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                      Ссылка не указана
-                                    </p>
-                                  )}
-                                </div>
-                              ))
-                            ) : (
-                              <span className="text-sm text-muted-foreground">
-                                Материалы недоступны
-                              </span>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -687,6 +606,90 @@ const CourseDetail = () => {
             </div>
           )}
         </div>
+
+        {selectedLessonData && (
+          <section className="bg-muted/30 py-12">
+            <div className="container mx-auto px-4">
+              <h1 className="mb-2 text-2xl font-bold">{selectedLessonData.title}</h1>
+              <div className="mb-4 flex items-center gap-4 text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {selectedLessonData.duration}
+                </span>
+              </div>
+              <Button
+                onClick={() => markLessonComplete(course.id, selectedLessonData.id)}
+                variant={isSelectedCompleted ? 'secondary' : 'default'}
+                disabled={isSelectedCompleted}
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {isSelectedCompleted ? 'Просмотрено' : 'Отметить как просмотренный'}
+              </Button>
+              <div className="mt-6 flex flex-col gap-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!previousLesson}
+                    onClick={() =>
+                      previousLesson && handleLessonSelect(String(previousLesson.id))
+                    }
+                  >
+                    Предыдущий урок
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!nextLesson}
+                    onClick={() => nextLesson && handleLessonSelect(String(nextLesson.id))}
+                  >
+                    Следующий урок
+                  </Button>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-4">
+                  <div className="mb-2 text-sm font-medium">
+                    Дополнительные материалы
+                  </div>
+                  <div className="space-y-3">
+                    {lessonMaterials.length ? (
+                      lessonMaterials.map((material, index) => (
+                        <div
+                          key={`${material.href || material.description}-${index}`}
+                          className="rounded-md border border-border/60 bg-muted/30 p-3"
+                        >
+                          <p className="text-sm text-foreground">
+                            {material.description || 'Ссылка на материал'}
+                          </p>
+                          {material.href ? (
+                            <a
+                              href={material.href}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={material.href}
+                              className="mt-1 inline-block max-w-full break-words text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+                            >
+                              {formatLessonMaterialLink(material.href)}
+                            </a>
+                          ) : (
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              Ссылка не указана
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        Материалы недоступны
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </Layout>
     );
   }
